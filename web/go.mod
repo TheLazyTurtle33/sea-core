@@ -1,3 +1,3 @@
-module github.com/TheLazyTurtle33/web
+module github.com/TheLazyTurtle33/sea-core/web
 
 go 1.24

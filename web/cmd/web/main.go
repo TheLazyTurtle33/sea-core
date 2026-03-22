@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
+
+	"github.com/TheLazyTurtle33/sea-core/web/internal/auth"
 )
 
 func main() {
-	http.HandleFunc("/twitch-bot-callback", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "hello from the web server callback! :3")
-		log.Println(strings.Split(r.RequestURI, "access_token=")[1])
-	})
+
+	http.HandleFunc("/auth/callback", auth.CallbackHandler)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "hello from the web server! :3")
 

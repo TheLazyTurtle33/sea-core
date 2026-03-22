@@ -5,6 +5,12 @@ services:
     ports:
       - "8080:8080"
 
+  bot:
+    build: ./bot
+    restart: unless-stopped
+    volumes:
+      - ./data/bot:/app/data
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped

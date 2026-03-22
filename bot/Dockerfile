@@ -3,10 +3,10 @@ WORKDIR /app
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN go build -o server ./cmd/bot
+RUN go build -o bot ./cmd/bot
 
 FROM alpine:latest
 WORKDIR /app
-COPY --from=builder /app/server .
+COPY --from=builder /app/bot .
 EXPOSE 8080
-CMD ["./server"]
+CMD ["./bot"]
