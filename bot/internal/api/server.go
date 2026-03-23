@@ -18,7 +18,7 @@ func HandleToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// log.Printf("received token: %s", body.Token)
-	store.Get().Set("oauth_token", body.Token)
+	store.Get().Set("user_oauth_token", body.Token)
 	w.WriteHeader(http.StatusOK)
 }
 
