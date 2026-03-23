@@ -1,9 +1,11 @@
+# syntax=docker/dockerfile:1
 FROM golang:1.24-alpine AS builder
 WORKDIR /app
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN go build -o bot ./cmd/bot
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -o bot ./cmd/bot
 
 FROM alpine:latest
 WORKDIR /app
