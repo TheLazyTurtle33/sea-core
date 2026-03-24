@@ -27,11 +27,11 @@ func new() *Context {
 	c.Auth = auth.New()
 	c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
 	if c.Broadcaster == nil {
-		log.Fatal("failed to get broadcaster")
+		log.Print("failed to get broadcaster")
 	}
 	c.Bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
 	if c.Bot == nil {
-		log.Fatal("failed to get bot")
+		log.Print("failed to get bot")
 	}
 	return c
 }

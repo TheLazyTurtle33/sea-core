@@ -241,7 +241,6 @@ user:read:subscriptions+
 user:manage:whispers+
 user:write:chat+
 user:bot+
-user:body+
 chat:edit+
 chat:read+
 whispers:read

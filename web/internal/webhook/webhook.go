@@ -80,5 +80,5 @@ func handleNotification(w http.ResponseWriter, body []byte) {
 		http.Error(w, "failed to send notification", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }

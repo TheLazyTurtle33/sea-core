@@ -50,6 +50,10 @@ func NewUser(auth, clientId string) *User {
 		log.Println(err)
 		return nil
 	}
+	if len(data.Data) == 0 {
+		log.Println("no user found")
+		return nil
+	}
 	u := data.Data[0]
 	return &u
 }
