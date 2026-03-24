@@ -23,8 +23,6 @@ type User struct {
 }
 
 func NewUser(auth, clientId string) *User {
-	log.Printf("auth: %s", auth)
-	log.Printf("client id: %s", clientId)
 	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
 	if err != nil {
 		log.Println(err)

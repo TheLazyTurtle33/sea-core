@@ -18,6 +18,7 @@ type Auth struct {
 	botOauthRefreshToken  string
 	clientId              string
 	clientSecret          string
+	appAccessToken        string
 	expectingToken        string
 }
 
@@ -133,6 +134,36 @@ func (a *Auth) RefreshToken(tokenType string) {
 	}
 	a.Save()
 }
+func (a *Auth) RefreshAppAccessToken() {
+	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", map[string][]string{
+		"client_id":     {a.clientId},
+		"client_secret": {a.clientSecret},
+		"grant_type":    {"client_credentials"},
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var data map[string]any
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Println(err)
+		return
+	}
+	a.appAccessToken = data["access_token"].(string)
+}
+
+func (a *Auth) GetAppAccessToken() string {
+	if a.appAccessToken == "" {
+		a.RefreshAppAccessToken()
+	}
+	return a.appAccessToken
+}
 
 func (a *Auth) GetBotOauthToken() string {
 	return a.botOauthToken
@@ -151,17 +182,21 @@ func (a *Auth) ExpectingToken(tokenType string) {
 }
 
 func (a *Auth) Save() {
-	file.New("/app/data/secret.json").Save([]byte(fmt.Sprintf(`{
+	file.New("/app/data/secret.json").Save([]byte(a.Export()))
+}
+
+func (a *Auth) Export() string {
+	return fmt.Sprintf(`{
 	"bot_oauth_token": "%s",
 	"user_oauth_token": "%s",
 	"bot_oauth_refresh_token": "%s",
 	"user_oauth_refresh_token": "%s",
 	"client_id": "%s",
 	"client_secret": "%s"
-}`, a.botOauthToken, a.userOauthToken, a.botOauthRefreshToken, a.userOauthRefreshToken, a.clientId, a.clientSecret)))
+}`, a.botOauthToken, a.userOauthToken, a.botOauthRefreshToken, a.userOauthRefreshToken, a.clientId, a.clientSecret)
 }
 
-const userScope = `
+const Scope = `
 bits:read+
 channel:manage:broadcast+
 channel:manage:ads+
@@ -179,6 +214,7 @@ channel:manage:schedule+
 channel:read:subscriptions+
 channel:manage:vips+
 channel:moderate+
+channel:bot+
 clips:edit+
 editor:manage:clips+
 moderation:read+
@@ -195,6 +231,7 @@ moderator:manage:shield_mode+
 moderator:manage:suspicious_users+
 moderator:manage:unban_requests+
 moderator:manage:warnings+
+moderator:read:followers+
 user:edit+
 user:read:chat+
 user:read:email+
@@ -203,16 +240,17 @@ user:read:follows+
 user:read:subscriptions+
 user:manage:whispers+
 user:write:chat+
+user:bot+
+user:body+
 chat:edit+
 chat:read+
 whispers:read
 `
-const botScop = "user:bot+user:write:chat+user:manage:whispers+chat:edit+chat:read+whispers:read"
 const redirectUrl = "https://lazyturtle33.live/auth/callback"
 
 func (a *Auth) CreateUserOauthUrl() string {
 	a.expectingToken = "user"
-	scope := strings.Replace(userScope, "\n", "", -1)
+	scope := strings.Replace(Scope, "\n", "", -1)
 	return fmt.Sprintf(
 		"https://id.twitch.tv/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
 		a.clientId, redirectUrl, scope)
@@ -220,7 +258,8 @@ func (a *Auth) CreateUserOauthUrl() string {
 
 func (a *Auth) CreateBotOauthUrl() string {
 	a.expectingToken = "bot"
+	scope := strings.Replace(Scope, "\n", "", -1)
 	return fmt.Sprintf(
 		"https://id.twitch.tv/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
-		a.clientId, redirectUrl, botScop)
+		a.clientId, redirectUrl, scope)
 }

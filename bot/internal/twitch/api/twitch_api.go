@@ -12,13 +12,25 @@ import (
 const baseURL = "https://api.twitch.tv/helix"
 
 type TwitchAPI struct {
-	as string
+	auth string
 }
 
 func As(as string) *TwitchAPI {
-	return &TwitchAPI{
-		as: as,
+	switch as {
+	case "bot":
+		return &TwitchAPI{
+			auth: context.Get().Auth.GetBotOauthToken(),
+		}
+	case "user":
+		return &TwitchAPI{
+			auth: context.Get().Auth.GetUserOauthToken(),
+		}
+	case "app":
+		return &TwitchAPI{
+			auth: context.Get().Auth.GetAppAccessToken(),
+		}
 	}
+	return nil
 }
 
 func (t *TwitchAPI) Get(endpoint string) ([]byte, error) {
@@ -47,11 +59,9 @@ func (t *TwitchAPI) request(endpoint, method, bodyType string, data io.Reader) (
 		return nil, err
 	}
 	req.Header.Set("Client-ID", context.Get().Auth.GetClientId())
-	if t.as == "bot" {
-		req.Header.Set("Authorization", "Bearer "+context.Get().Auth.GetBotOauthToken())
-	} else {
-		req.Header.Set("Authorization", "Bearer "+context.Get().Auth.GetUserOauthToken())
-	}
+
+	req.Header.Set("Authorization", "Bearer "+t.auth)
+
 	if bodyType != "" {
 		req.Header.Set("Content-Type", bodyType)
 	}

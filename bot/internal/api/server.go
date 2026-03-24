@@ -2,10 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 )
 
 // example endpoint web can call to send the oauth token to the bot
@@ -43,12 +45,36 @@ func HandleOauthUrl(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"url": url})
-	w.WriteHeader(http.StatusOK)
+
+}
+
+func HandleGetAuth(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(context.Get().Auth.Export()))
+
+}
+
+func HandleNotification(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "failed to read body", http.StatusBadRequest)
+		return
+	}
+	var notification eventsub.EventNotification
+	if err := json.Unmarshal(body, &notification); err != nil {
+		log.Println(err)
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	eventsub.HandleNotification(&notification)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func Start() {
 	http.HandleFunc("/internal/token", HandleToken)
 	http.HandleFunc("/internal/oauth-url", HandleOauthUrl)
+	http.HandleFunc("/internal/get-auth", HandleGetAuth)
+	http.HandleFunc("/internal/notification", HandleNotification)
 	log.Println("bot internal API listening on :9090")
 	if err := http.ListenAndServe(":9090", nil); err != nil {
 		log.Fatal(err)
