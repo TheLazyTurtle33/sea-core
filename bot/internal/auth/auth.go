@@ -1,19 +1,24 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/file"
 )
 
 type Auth struct {
-	userOauthToken string
-	botOauthToken  string
-	clientId       string
-	clientSecret   string
-	expectingToken string
+	userOauthToken        string
+	botOauthToken         string
+	userOauthRefreshToken string
+	botOauthRefreshToken  string
+	clientId              string
+	clientSecret          string
+	expectingToken        string
 }
 
 func New() *Auth {
@@ -24,7 +29,8 @@ func New() *Auth {
 	}
 	a.botOauthToken = secret["bot_oauth_token"].(string)
 	a.userOauthToken = secret["user_oauth_token"].(string)
-
+	a.botOauthRefreshToken = secret["bot_oauth_refresh_token"].(string)
+	a.userOauthRefreshToken = secret["user_oauth_refresh_token"].(string)
 	a.clientId = secret["client_id"].(string)
 	if a.clientId == "" {
 		log.Fatal("client_id is required")
@@ -41,20 +47,91 @@ func (a *Auth) GetUserOauthToken() string {
 	return a.userOauthToken
 }
 
-func (a *Auth) SetOauthToken(token string) {
+func (a *Auth) SetOauthToken(code string) {
+	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", map[string][]string{
+		"client_id":     {a.clientId},
+		"client_secret": {a.clientSecret},
+		"code":          {code},
+		"grant_type":    {"authorization_code"},
+		"redirect_uri":  {redirectUrl},
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var data map[string]any
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Println(err)
+		return
+	}
+	token := data["access_token"].(string)
+	refreshToken := data["refresh_token"].(string)
 	switch a.expectingToken {
 	case "user":
 		a.userOauthToken = token
+		a.userOauthRefreshToken = refreshToken
 		a.expectingToken = ""
 		a.Save()
 	case "bot":
 		a.botOauthToken = token
+		a.botOauthRefreshToken = refreshToken
 		a.expectingToken = ""
 		a.Save()
 	default:
 		log.Println("not expecting token, ignoring")
 	}
 
+}
+
+func (a *Auth) RefreshToken(tokenType string) {
+	var refreshToken string
+	switch tokenType {
+	case "user":
+		refreshToken = a.userOauthRefreshToken
+	case "bot":
+		refreshToken = a.botOauthRefreshToken
+	default:
+		log.Println("invalid token type")
+		return
+	}
+	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", map[string][]string{
+		"client_id":     {a.clientId},
+		"client_secret": {a.clientSecret},
+		"refresh_token": {refreshToken},
+		"grant_type":    {"refresh_token"},
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var data map[string]any
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Println(err)
+		return
+	}
+	token := data["access_token"].(string)
+	refreshToken = data["refresh_token"].(string)
+	switch tokenType {
+	case "user":
+		a.userOauthToken = token
+		a.userOauthRefreshToken = refreshToken
+	case "bot":
+		a.botOauthToken = token
+		a.botOauthRefreshToken = refreshToken
+	}
+	a.Save()
 }
 
 func (a *Auth) GetBotOauthToken() string {
@@ -77,9 +154,11 @@ func (a *Auth) Save() {
 	file.New("/app/data/secret.json").Save([]byte(fmt.Sprintf(`{
 	"bot_oauth_token": "%s",
 	"user_oauth_token": "%s",
+	"bot_oauth_refresh_token": "%s",
+	"user_oauth_refresh_token": "%s",
 	"client_id": "%s",
 	"client_secret": "%s"
-}`, a.botOauthToken, a.userOauthToken, a.clientId, a.clientSecret)))
+}`, a.botOauthToken, a.userOauthToken, a.botOauthRefreshToken, a.userOauthRefreshToken, a.clientId, a.clientSecret)))
 }
 
 const userScope = `
