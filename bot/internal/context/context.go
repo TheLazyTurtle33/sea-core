@@ -1,9 +1,16 @@
 package context
 
-import "github.com/TheLazyTurtle33/sea-core/bot/internal/auth"
+import (
+	"log"
+
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/auth"
+	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
+)
 
 type Context struct {
-	Auth *auth.Auth
+	Auth        *auth.Auth
+	Broadcaster *datatypes.User
+	Bot         *datatypes.User
 }
 
 var instance *Context
@@ -18,5 +25,13 @@ func Get() *Context {
 func new() *Context {
 	c := &Context{}
 	c.Auth = auth.New()
+	c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+	if c.Broadcaster == nil {
+		log.Fatal("failed to get broadcaster")
+	}
+	c.Bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
+	if c.Bot == nil {
+		log.Fatal("failed to get bot")
+	}
 	return c
 }
