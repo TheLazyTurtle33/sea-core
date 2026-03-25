@@ -67,7 +67,7 @@ func HandleNotification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	eventsub.HandleNotification(&notification)
-	log.Println(string(body))
+
 	w.WriteHeader(http.StatusOK)
 }
 

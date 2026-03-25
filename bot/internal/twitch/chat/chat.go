@@ -2,6 +2,11 @@ package chat
 
 import (
 	"log"
+	"slices"
+	"strings"
+
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 )
 
 type EventData struct {
@@ -46,4 +51,79 @@ type EventData struct {
 
 func HandleMessage(data EventData) {
 	log.Println(data.Message.Text)
+	parseForHello(data)
+}
+
+var hellos = []string{
+	"hello",
+	"hi",
+	"hey",
+	"sup",
+	"yo",
+	"howdy",
+	"morning",
+	"afternoon",
+	"evening",
+	"night",
+}
+
+type botName struct {
+	name string
+	mean bool
+}
+
+var botNames = []botName{
+	{name: context.Get().Bot.Login, mean: false},
+	{name: "@" + context.Get().Bot.Login, mean: false},
+	{name: "bots", mean: false},
+	{name: "bot", mean: false},
+	{name: "@bots", mean: false},
+	{name: "@bot", mean: true},
+	{name: "lazy", mean: false},
+	{name: "@lazy", mean: true},
+	{name: "lazybot", mean: false},
+	{name: "@lazybot", mean: false},
+	{name: "clanker", mean: true},
+	{name: "@clanker", mean: true},
+}
+
+func parseForHello(data EventData) {
+	if data.ChatterUserLogin == context.Get().Bot.Login {
+		return
+	}
+	words := strings.Split(strings.ToLower(data.Message.Text), " ")
+	var helloFound, botMentioned, mean bool
+
+	for _, word := range words {
+		if slices.Contains(hellos, word) {
+			helloFound = true
+		}
+		for _, botName := range botNames {
+			if strings.Contains(word, botName.name) {
+				botMentioned = true
+				mean = botName.mean
+				break
+			}
+		}
+	}
+
+	var message = "Hai " + data.ChatterUserName + " ^w^"
+
+	if data.ChatterUserLogin == "riceball_129" {
+		message = "RICEBALL! hi :3"
+	}
+
+	if mean {
+		message = ":c"
+	}
+
+	if helloFound && botMentioned {
+		log.Println("sending reply")
+		_, err := api.As("bot").SendReply(message, data.MessageID)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
 }
