@@ -43,11 +43,49 @@ func (a *ReplyToMessage) Run(v ...any) action.Flags { // v[0] is the message, v[
 		a.Message = v[0].(string)
 	}
 	v = v[1:] // remove message from v if there, else remove nil
-	twitchapi.As("bot").SendReply(a.Message, v[0].(datatypes.ChatMessageData).MessageID)
+	data, ok := v[0].(datatypes.ChatMessageData)
+	if !ok {
+		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
+		return flags
+	}
+	_, err := twitchapi.As("bot").SendReply(a.Message, data.MessageID)
+	if err != nil {
+		flags.Error = err
+	}
 	return flags
 }
 
 func (a *ReplyToMessage) OnAdd(v ...any) action.Flags {
+	flags := action.Flags{}
+	return flags
+}
+
+type SendMessage struct {
+	action.Action
+	Message string
+}
+
+func (a *SendMessage) Run(v ...any) action.Flags {
+	flags := action.Flags{}
+	if len(v) == 0 {
+		flags.Error = fmt.Errorf("no data provided")
+		return flags
+	}
+	if a.Message == "" {
+		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+			flags.Error = fmt.Errorf("no message provided")
+			return flags
+		}
+		a.Message = v[0].(string)
+	}
+	_, err := twitchapi.As("bot").SendMessage(a.Message)
+	if err != nil {
+		flags.Error = err
+	}
+	return flags
+}
+
+func (a *SendMessage) OnAdd(v ...any) action.Flags {
 	flags := action.Flags{}
 	return flags
 }

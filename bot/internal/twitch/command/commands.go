@@ -9,29 +9,51 @@ import (
 )
 
 var TestCommand = Command{
-	Name:        "test",
+	Name:        "Test",
 	Triggers:    []string{"!test"},
-	Description: "a test command",
+	Description: "A test command.",
 	Usage:       "!test",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "test passed! :3"}},
 	QueueName:   "default",
-	blocking:    false,
+	Blocking:    false,
 }
 
 var DiscordLink = Command{
-	Name:        "discord",
+	Name:        "Discord",
 	Triggers:    []string{"!discord", "!dc"},
-	Description: "get the discord invite link",
+	Description: "Get the discord invite link.",
 	Usage:       "!discord",
 	Actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.ReplyToMessage{}},
 	QueueName:   "default",
-	blocking:    false,
+	Blocking:    false,
+}
+
+var Lurk = Command{
+	Name:        "Lurk",
+	Triggers:    []string{"!lurk"},
+	Description: "Thanks the viewer for lurking.",
+	Usage:       "!lurk",
+	Actions:     []action.Action{&actions.CreateLurkText{}, &actions.SendMessage{}},
+	QueueName:   "default",
+	Blocking:    false,
+}
+
+var CommandsCommand = Command{
+	Name:        "Commands",
+	Triggers:    []string{"!commands"},
+	Description: "Gives a link to the webpage with all the commands",
+	Usage:       "!commands",
+	Actions:     []action.Action{&actions.SendMessage{Message: "Check out all my wondefull commands :3 (lazyturtle33.live/commands)"}},
+	QueueName:   "default",
+	Blocking:    false,
 }
 
 var CommandTriggers = map[string]*Command{}
 var Commands = []*Command{
 	&TestCommand,
 	&DiscordLink,
+	&Lurk,
+	&CommandsCommand,
 }
 
 func RegisterCommands() {

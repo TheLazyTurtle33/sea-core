@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/queue"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
@@ -15,9 +16,12 @@ import (
 func main() {
 	logger.Init()
 	logger.Log("bot starting")
-	eventsub.SubscribeAll()
 	trapSignals()
+
 	context.Get().Auth.StartRefreshTokensWorker()
+
+	eventsub.SubscribeAll()
+	queue.StartUp()
 	api.Start()
 }
 

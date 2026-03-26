@@ -59,17 +59,17 @@ func SubscribeAll() {
 }
 
 func subChat() {
-	if context.Get().Broadcaster == nil {
+	if context.Get().GetBroadcaster() == nil {
 		logger.Warn("failed to subscribe to chat messages: no broadcaster")
 		return
 	}
-	if context.Get().Bot == nil {
+	if context.Get().GetBot() == nil {
 		logger.Warn("failed to subscribe to chat messages: no bot")
 		return
 	}
 	err := Subscribe("channel.chat.message", "1", Condition{
-		"broadcaster_user_id": context.Get().Broadcaster.Id,
-		"user_id":             context.Get().Bot.Id,
+		"broadcaster_user_id": context.Get().GetBroadcaster().Id,
+		"user_id":             context.Get().GetBot().Id,
 	})
 	if err != nil {
 		logger.Error(err, "failed to subscribe to chat messages")

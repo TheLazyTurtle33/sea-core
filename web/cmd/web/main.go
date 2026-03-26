@@ -16,6 +16,11 @@ func main() {
 	http.HandleFunc("/auth/bot", auth.BotHandler)
 	http.HandleFunc("/eventsub", webhook.Handler)
 
+	http.HandleFunc("/commands", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "still under costructoin! sowy >.<")
+
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "hello from the web server! :3")
 

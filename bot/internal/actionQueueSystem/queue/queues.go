@@ -15,16 +15,16 @@ var DefaultQueue = Queue{
 	repeatDelay: 0,
 }
 
-var RepetingQueueExample = Queue{
-	name:        "repeting",
-	locked:      false,
+var DiscordQueue = Queue{
+	name:        "Discord",
+	locked:      true,
 	repeating:   true,
-	persistent:  false,
-	repeatDelay: 10 * time.Second,
-	actions:     []action.Action{&actions.ExampleActoin{}, &actions.ExampleActoin{}},
+	persistent:  true,
+	repeatDelay: 30 * time.Minute,
+	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
 }
 
-var Queues = []*Queue{&DefaultQueue, &RepetingQueueExample}
+var Queues = []*Queue{&DefaultQueue, &DiscordQueue}
 
 func GetQueue(name string) *Queue {
 	for _, q := range Queues {
@@ -33,4 +33,10 @@ func GetQueue(name string) *Queue {
 		}
 	}
 	return nil
+}
+
+func StartUp() {
+	DefaultQueue.Start()
+	DiscordQueue.puased += 30 * time.Minute
+	DiscordQueue.Start()
 }

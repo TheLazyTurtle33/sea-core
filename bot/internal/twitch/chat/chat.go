@@ -13,6 +13,7 @@ import (
 
 func HandleMessage(data datatypes.ChatMessageData) {
 	logger.Log("chat message received", "message", data.Message.Text, "user", data.ChatterUserName)
+	context.Get().LastChat = &data
 	parseForHello(data)
 	parseForCommand(data)
 }
@@ -54,7 +55,7 @@ var botNames = []botName{
 }
 
 func parseForHello(data datatypes.ChatMessageData) {
-	if data.ChatterUserLogin == context.Get().Bot.Login {
+	if data.ChatterUserLogin == context.Get().GetBot().Login {
 		return
 	}
 	words := strings.Split(strings.ToLower(data.Message.Text), " ")
@@ -94,7 +95,6 @@ func parseForHello(data datatypes.ChatMessageData) {
 }
 
 func parseForCommand(data datatypes.ChatMessageData) {
-
 	command.RegisterCommands()
 	if com := command.GetCommand(data.Message.Fragments[0].Text); com != nil {
 		logger.Log("found command", "command", com.Name)

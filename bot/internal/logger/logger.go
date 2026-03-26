@@ -7,12 +7,11 @@ import (
 	"os"
 	"time"
 
-	// "github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/file"
 )
 
-var logFile *file.File
-
+const logDir = "/app/data/logs"
 const logFilePath = "/app/data/logs/logs-%v.log"
 
 var StanderOutLogger *slog.Logger
@@ -22,20 +21,28 @@ var FileLogger *slog.Logger
 
 var Loggers = []*slog.Logger{}
 
-func Init() {
+var logFileHandle *os.File
 
-	logFile = file.New(fmt.Sprintf(logFilePath, time.Now().Format("2006-01-02")))
+func Init() {
+	// Ensure the logs directory exists
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		log.Fatalf("failed to create log directory: %v", err)
+	}
+
 	StanderOutLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	Loggers = append(Loggers, StanderOutLogger)
-	writer, err := logFile.GetFileWiter()
+
+	path := fmt.Sprintf(logFilePath, time.Now().Format("2006-01-02"))
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatalf("failed to open log file: %v", err)
 	}
-	FileLogger = slog.New(slog.NewTextHandler(writer, nil))
+	logFileHandle = f
+
+	FileLogger = slog.New(slog.NewTextHandler(f, nil))
 	Loggers = append(Loggers, FileLogger)
 	// WebLogger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	// cleanup.RegisterCleaner(&cleaner{})
+	cleanup.RegisterCleaner(&cleaner{})
 }
 
 func Log(msg string, args ...any) {
@@ -64,10 +71,12 @@ func Debug(msg string, args ...any) {
 	}
 }
 
-// type cleaner struct {
-// 	cleanup.Cleaner
-// }
+type cleaner struct {
+	cleanup.Cleaner
+}
 
-// func (c *cleaner) clean() {
-
-// }
+func (c *cleaner) Clean() {
+	if logFileHandle != nil {
+		logFileHandle.Close()
+	}
+}

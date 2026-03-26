@@ -88,11 +88,13 @@ func (a *Auth) SetOauthToken(code string) {
 
 func (a *Auth) StartRefreshTokensWorker() {
 	go func() {
-		logger.Log("refreshing tokens")
-		a.RefreshToken("user")
-		a.RefreshToken("bot")
-		a.RefreshAppAccessToken()
-		time.Sleep(1 * time.Hour)
+		for {
+			logger.Log("refreshing tokens")
+			a.RefreshToken("user")
+			a.RefreshToken("bot")
+			a.RefreshAppAccessToken()
+			time.Sleep(1 * time.Hour)
+		}
 	}()
 }
 

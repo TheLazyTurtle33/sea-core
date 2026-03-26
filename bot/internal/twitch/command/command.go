@@ -12,7 +12,7 @@ type Command struct {
 	Usage       string
 	Actions     []action.Action
 	QueueName   string
-	blocking    bool
+	Blocking    bool
 }
 
 func (c *Command) AddActions(data any) {
@@ -21,7 +21,7 @@ func (c *Command) AddActions(data any) {
 		q.AddActions(a, data)
 	}
 
-	if c.blocking {
+	if c.Blocking {
 		q.Lock()
 	}
 

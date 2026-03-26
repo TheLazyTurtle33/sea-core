@@ -8,8 +8,9 @@ import (
 
 type Context struct {
 	Auth        *auth.Auth
-	Broadcaster *datatypes.User
-	Bot         *datatypes.User
+	broadcaster *datatypes.User
+	bot         *datatypes.User
+	LastChat    *datatypes.ChatMessageData
 }
 
 var instance *Context
@@ -24,36 +25,37 @@ func Get() *Context {
 func new() *Context {
 	c := &Context{}
 	c.Auth = auth.New()
-	c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
-	if c.Broadcaster == nil {
+	c.LastChat = &datatypes.ChatMessageData{}
+	c.broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+	if c.broadcaster == nil {
 		logger.Warn("Broadcaster could not be retrieved")
 	}
-	c.Bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
-	if c.Bot == nil {
+	c.bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
+	if c.bot == nil {
 		logger.Warn("Bot could not be retrieved")
 	}
 	return c
 }
 
 func (c *Context) GetBroadcaster() *datatypes.User {
-	if c.Broadcaster == nil {
-		c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
-		if c.Broadcaster == nil {
+	if c.broadcaster == nil {
+		c.broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+		if c.broadcaster == nil {
 			logger.Warn("Broadcaster could not be retrieved")
 		}
 	}
 
-	return c.Broadcaster
+	return c.broadcaster
 }
 
 func (c *Context) GetBot() *datatypes.User {
-	if c.Bot == nil {
-		c.Bot = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
-		if c.Bot == nil {
+	if c.bot == nil {
+		c.bot = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+		if c.bot == nil {
 			logger.Warn("Broadcaster could not be retrieved")
 		}
 	}
-	return c.Bot
+	return c.bot
 }
 
 func (c *Context) GetAuth() *auth.Auth {
