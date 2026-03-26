@@ -13,7 +13,6 @@ var DefaultQueue = Queue{
 	repeating:   false,
 	persistent:  true,
 	repeatDelay: 0,
-	culling:     true,
 }
 
 var RepetingQueueExample = Queue{
@@ -23,7 +22,6 @@ var RepetingQueueExample = Queue{
 	persistent:  false,
 	repeatDelay: 10 * time.Second,
 	actions:     []action.Action{&actions.ExampleActoin{}, &actions.ExampleActoin{}},
-	culling:     false,
 }
 
 var Queues = []*Queue{&DefaultQueue, &RepetingQueueExample}

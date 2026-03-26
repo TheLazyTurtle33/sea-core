@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/file"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 type Auth struct {
@@ -27,11 +27,11 @@ func New() *Auth {
 	a := &Auth{}
 	secret := file.New("/app/data/secret.json").Read()
 	if secret == nil {
-		log.Fatal("secret.json is required. look at secret.json.example for an example")
+		logger.Error(nil, "secret.json is required. look at secret.json.example for an example")
 	}
 	err := json.Unmarshal(secret, a)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err, "failed to unmarshal secret.json")
 	}
 	return a
 }
@@ -42,7 +42,7 @@ func (a *Auth) GetUserOauthToken() string {
 
 func (a *Auth) SetOauthToken(code string) {
 	if a.ExpectingToken == "" {
-		log.Println("not expecting token, ignoring")
+		logger.Warn("not expecting token, ignoring")
 		return
 	}
 	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", map[string][]string{
@@ -53,18 +53,18 @@ func (a *Auth) SetOauthToken(code string) {
 		"redirect_uri":  {redirectUrl},
 	})
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to get oauth token")
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to read response body")
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal response body")
 		return
 	}
 	token := data["access_token"].(string)
@@ -81,14 +81,14 @@ func (a *Auth) SetOauthToken(code string) {
 		a.ExpectingToken = ""
 		a.Save()
 	default:
-		log.Println("not expecting token, ignoring")
+		logger.Warn("not expecting token, ignoring")
 	}
 
 }
 
 func (a *Auth) StartRefreshTokensWorker() {
 	go func() {
-		log.Println("refreshing tokens")
+		logger.Log("refreshing tokens")
 		a.RefreshToken("user")
 		a.RefreshToken("bot")
 		a.RefreshAppAccessToken()
@@ -104,7 +104,7 @@ func (a *Auth) RefreshToken(tokenType string) {
 	case "bot":
 		refreshToken = a.BotOauthRefreshToken
 	default:
-		log.Println("invalid token type")
+		logger.Warn("invalid token type")
 		return
 	}
 	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", map[string][]string{
@@ -114,18 +114,18 @@ func (a *Auth) RefreshToken(tokenType string) {
 		"grant_type":    {"refresh_token"},
 	})
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to refresh token")
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to read response body")
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal response body")
 		return
 	}
 	token := data["access_token"].(string)
@@ -147,18 +147,18 @@ func (a *Auth) RefreshAppAccessToken() {
 		"grant_type":    {"client_credentials"},
 	})
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to refresh app access token")
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to read response body")
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal response body")
 		return
 	}
 	a.AppAccessToken = data["access_token"].(string)
@@ -194,7 +194,7 @@ func (a *Auth) Save() {
 func (a *Auth) Export() []byte {
 	out, err := json.Marshal(a)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to marshal auth")
 		return nil
 	}
 	return out

@@ -3,11 +3,11 @@ package eventsub
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/chat"
 )
@@ -50,7 +50,7 @@ type transport struct {
 }
 
 func Subscribe(eventType, version string, condition Condition) error {
-	log.Printf("subscribing to %s", eventType)
+	logger.Log("subscribing to %s", "event", eventType)
 	sub := subscription{
 		Type:      eventType,
 		Version:   version,
@@ -70,7 +70,7 @@ func Subscribe(eventType, version string, condition Condition) error {
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to %s: %w", eventType, err)
 	}
-	log.Println(string(body2))
+	logger.Log("subscribed to %s", "event", eventType, "body", string(body2))
 	return nil
 }
 
@@ -79,11 +79,11 @@ func HandleNotification(notification *EventNotification) {
 	case "channel.chat.message":
 		var data datatypes.ChatMessageData
 		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			log.Println(err)
+			logger.Error(err, "failed to unmarshal event")
 			return
 		}
 		chat.HandleMessage(data)
 	default:
-		log.Printf("unknown event type: %s", notification.Subscription.Type)
+		logger.Warn("unknown event type", "event", notification.Subscription.Type)
 	}
 }

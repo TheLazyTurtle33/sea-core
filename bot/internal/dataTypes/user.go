@@ -3,8 +3,9 @@ package datatypes
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
+
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 type User struct {
@@ -25,7 +26,7 @@ type User struct {
 func NewUser(auth, clientId string) *User {
 	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to create request")
 		return nil
 	}
 	req.Header.Set("Client-ID", clientId)
@@ -34,24 +35,24 @@ func NewUser(auth, clientId string) *User {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to do request")
 		return nil
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to read response body")
 		return nil
 	}
 	var data struct {
 		Data []User `json:"data"`
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal response body")
 		return nil
 	}
 	if len(data.Data) == 0 {
-		log.Println("no user found")
+		logger.Warn("no user found")
 		return nil
 	}
 	u := data.Data[0]

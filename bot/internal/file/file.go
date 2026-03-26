@@ -2,6 +2,7 @@ package file
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 )
 
@@ -40,4 +41,13 @@ func (f *File) ReadAsJson() map[string]any {
 
 func (f *File) Save(content []byte) error {
 	return os.WriteFile(f.path, content, 0644)
+}
+
+func (f *File) GetFileWiter() (io.Writer, error) {
+	return os.OpenFile(f.path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+}
+
+func Exists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }

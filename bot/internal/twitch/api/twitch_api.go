@@ -3,11 +3,11 @@ package api
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 const baseURL = "https://api.twitch.tv/helix"
@@ -71,7 +71,7 @@ func (t *TwitchAPI) request(endpoint, method, bodyType string, data io.Reader) (
 
 	req, err := http.NewRequest(method, baseURL+endpoint, data)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to create request")
 		return nil, err
 	}
 	req.Header.Set("Client-ID", context.Get().Auth.GetClientId())

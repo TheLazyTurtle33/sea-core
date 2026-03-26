@@ -1,10 +1,9 @@
 package context
 
 import (
-	"log"
-
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/auth"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 type Context struct {
@@ -27,11 +26,36 @@ func new() *Context {
 	c.Auth = auth.New()
 	c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
 	if c.Broadcaster == nil {
-		log.Print("failed to get broadcaster")
+		logger.Warn("Broadcaster could not be retrieved")
 	}
 	c.Bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
 	if c.Bot == nil {
-		log.Print("failed to get bot")
+		logger.Warn("Bot could not be retrieved")
 	}
 	return c
+}
+
+func (c *Context) GetBroadcaster() *datatypes.User {
+	if c.Broadcaster == nil {
+		c.Broadcaster = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+		if c.Broadcaster == nil {
+			logger.Warn("Broadcaster could not be retrieved")
+		}
+	}
+
+	return c.Broadcaster
+}
+
+func (c *Context) GetBot() *datatypes.User {
+	if c.Bot == nil {
+		c.Bot = datatypes.NewUser(c.Auth.GetUserOauthToken(), c.Auth.GetClientId())
+		if c.Bot == nil {
+			logger.Warn("Broadcaster could not be retrieved")
+		}
+	}
+	return c.Bot
+}
+
+func (c *Context) GetAuth() *auth.Auth {
+	return c.Auth
 }

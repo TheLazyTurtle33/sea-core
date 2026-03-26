@@ -1,10 +1,10 @@
 package queue
 
 import (
-	"log"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 type Queue struct {
@@ -17,7 +17,6 @@ type Queue struct {
 	actionData     []any
 	actionDataNext any
 	running        bool
-	culling        bool
 }
 
 func (q *Queue) AddActions(a action.Action, data any) {
@@ -62,7 +61,7 @@ func (q *Queue) worker() {
 			return
 		}
 
-		if q.culling {
+		if !q.repeating {
 			q.runActions(q.actions[0], q.actionData[0])
 			q.actions = q.actions[1:]
 			q.actionData = q.actionData[1:]
@@ -70,9 +69,7 @@ func (q *Queue) worker() {
 			for i, a := range q.actions {
 				q.runActions(a, q.actionData[i])
 			}
-			if q.repeating {
-				time.Sleep(q.repeatDelay)
-			}
+			time.Sleep(q.repeatDelay)
 		}
 
 	}
@@ -82,7 +79,7 @@ func (q *Queue) runActions(act action.Action, data any) {
 
 	flags := act.Run(q.actionDataNext, data)
 	if flags.Error != nil {
-		log.Println(flags.Error)
+		logger.Error(flags.Error, "error running action")
 		return
 	}
 	if flags.Lock.Active {

@@ -1,18 +1,18 @@
 package chat
 
 import (
-	"log"
 	"slices"
 	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/command"
 )
 
 func HandleMessage(data datatypes.ChatMessageData) {
-	log.Println(data.Message.Text)
+	logger.Log("chat message received", "message", data.Message.Text, "user", data.ChatterUserName)
 	parseForHello(data)
 	parseForCommand(data)
 }
@@ -84,10 +84,9 @@ func parseForHello(data datatypes.ChatMessageData) {
 	}
 
 	if helloFound && botMentioned {
-		log.Println("sending reply")
 		_, err := api.As("bot").SendReply(message, data.MessageID)
 		if err != nil {
-			log.Println(err)
+			logger.Error(err, "failed to send reply")
 			return
 		}
 	}
@@ -95,9 +94,10 @@ func parseForHello(data datatypes.ChatMessageData) {
 }
 
 func parseForCommand(data datatypes.ChatMessageData) {
+
 	command.RegisterCommands()
 	if com := command.GetCommand(data.Message.Fragments[0].Text); com != nil {
-		log.Println("found command", com.Name)
+		logger.Log("found command", "command", com.Name)
 		com.AddActions(data)
 	}
 }

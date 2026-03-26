@@ -2,10 +2,10 @@ package command
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action/actions"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
 var TestCommand = Command{
@@ -52,7 +52,7 @@ func GetCommand(trigger string) *Command {
 func GetCommandsJson() []byte {
 	out, err := json.Marshal(Commands)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to marshal commands")
 		return nil
 	}
 	return out

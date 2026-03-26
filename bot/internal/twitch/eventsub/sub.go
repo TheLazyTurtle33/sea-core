@@ -2,10 +2,10 @@ package eventsub
 
 import (
 	"encoding/json"
-	"log"
 	"slices"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 )
 
@@ -39,12 +39,12 @@ type SubEvents struct {
 func SubscribeAll() {
 	body, err := twitchapi.As("app").Get("/eventsub/subscriptions")
 	if err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to get subscriptions")
 		return
 	}
 	var subEvents SubEvents
 	if err := json.Unmarshal(body, &subEvents); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal subscriptions")
 		return
 	}
 
@@ -60,11 +60,11 @@ func SubscribeAll() {
 
 func subChat() {
 	if context.Get().Broadcaster == nil {
-		log.Println("failed to subscribe to chat messages: no broadcaster")
+		logger.Warn("failed to subscribe to chat messages: no broadcaster")
 		return
 	}
 	if context.Get().Bot == nil {
-		log.Println("failed to subscribe to chat messages: no bot")
+		logger.Warn("failed to subscribe to chat messages: no bot")
 		return
 	}
 	err := Subscribe("channel.chat.message", "1", Condition{
@@ -72,6 +72,6 @@ func subChat() {
 		"user_id":             context.Get().Bot.Id,
 	})
 	if err != nil {
-		log.Printf("failed to subscribe to chat messages: %s", err)
+		logger.Error(err, "failed to subscribe to chat messages")
 	}
 }

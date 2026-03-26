@@ -3,10 +3,10 @@ package api
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 )
 
@@ -62,11 +62,11 @@ func HandleNotification(w http.ResponseWriter, r *http.Request) {
 	}
 	var notification eventsub.EventNotification
 	if err := json.Unmarshal(body, &notification); err != nil {
-		log.Println(err)
+		logger.Error(err, "failed to unmarshal body")
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	log.Println(string(body))
+	logger.Debug("received eventsub notification", "body", string(body))
 	eventsub.HandleNotification(&notification)
 
 	w.WriteHeader(http.StatusOK)
@@ -77,8 +77,8 @@ func Start() {
 	http.HandleFunc("/internal/oauth-url", HandleOauthUrl)
 	http.HandleFunc("/internal/get-auth", HandleGetAuth)
 	http.HandleFunc("/internal/notification", HandleNotification)
-	log.Println("bot internal API listening on :9090")
+	logger.Log("bot internal API listening on :9090")
 	if err := http.ListenAndServe(":9090", nil); err != nil {
-		log.Fatal(err)
+		logger.Error(err, "failed to start internal API")
 	}
 }
