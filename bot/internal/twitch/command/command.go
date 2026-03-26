@@ -6,13 +6,13 @@ import (
 )
 
 type Command struct {
-	Name        string
-	Triggers    []string
-	Description string
-	Usage       string
-	Actions     []action.Action
-	QueueName   string
-	Blocking    bool
+	Name        string          `json:"name"`
+	Triggers    []string        `json:"triggers"`
+	Description string          `json:"description"`
+	Usage       string          `json:"usage"`
+	Actions     []action.Action `json:"-"`
+	QueueName   string          `json:"queue"`
+	Blocking    bool            `json:"blocking"`
 }
 
 func (c *Command) AddActions(data any) {

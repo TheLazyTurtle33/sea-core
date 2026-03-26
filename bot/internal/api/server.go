@@ -7,6 +7,7 @@ import (
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/command"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 )
 
@@ -72,11 +73,17 @@ func HandleNotification(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func HandleGetCommands(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(command.GetCommandsJson())
+}
+
 func Start() {
 	http.HandleFunc("/internal/token", HandleToken)
 	http.HandleFunc("/internal/oauth-url", HandleOauthUrl)
 	http.HandleFunc("/internal/get-auth", HandleGetAuth)
 	http.HandleFunc("/internal/notification", HandleNotification)
+	http.HandleFunc("/internal/commands", HandleGetCommands)
 	logger.Log("bot internal API listening on :9090")
 	if err := http.ListenAndServe(":9090", nil); err != nil {
 		logger.Error(err, "failed to start internal API")
