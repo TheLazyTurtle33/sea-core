@@ -8,7 +8,6 @@ import (
 
 func main() {
 	eventsub.SubscribeAll()
-	context.Get().Auth.RefreshToken("bot")
-	context.Get().Auth.RefreshToken("user")
+	context.Get().Auth.StartRefreshTokensWorker()
 	api.Start()
 }

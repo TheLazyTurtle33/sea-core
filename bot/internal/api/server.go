@@ -34,10 +34,10 @@ func HandleOauthUrl(w http.ResponseWriter, r *http.Request) {
 	url := ""
 	switch body.Type {
 	case "user":
-		context.Get().Auth.ExpectingToken("user")
+		context.Get().Auth.StartExpectingToken("user")
 		url = context.Get().Auth.CreateUserOauthUrl()
 	case "bot":
-		context.Get().Auth.ExpectingToken("bot")
+		context.Get().Auth.StartExpectingToken("bot")
 		url = context.Get().Auth.CreateBotOauthUrl()
 	default:
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -50,7 +50,7 @@ func HandleOauthUrl(w http.ResponseWriter, r *http.Request) {
 
 func HandleGetAuth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(context.Get().Auth.Export()))
+	w.Write(context.Get().Auth.Export())
 
 }
 
@@ -66,6 +66,7 @@ func HandleNotification(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	log.Println(string(body))
 	eventsub.HandleNotification(&notification)
 
 	w.WriteHeader(http.StatusOK)

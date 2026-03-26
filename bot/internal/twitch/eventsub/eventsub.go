@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/chat"
 )
@@ -76,7 +77,7 @@ func Subscribe(eventType, version string, condition Condition) error {
 func HandleNotification(notification *EventNotification) {
 	switch notification.Subscription.Type {
 	case "channel.chat.message":
-		var data chat.EventData
+		var data datatypes.ChatMessageData
 		if err := json.Unmarshal(notification.Event, &data); err != nil {
 			log.Println(err)
 			return
