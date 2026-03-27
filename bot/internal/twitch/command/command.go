@@ -13,9 +13,13 @@ type Command struct {
 	Actions     []action.Action `json:"-"`
 	QueueName   string          `json:"queue"`
 	Blocking    bool            `json:"blocking"`
+	Active      bool            `json:"is_active"`
 }
 
 func (c *Command) AddActions(data any) {
+	if !c.Active {
+		return
+	}
 	q := queue.GetQueue(c.QueueName)
 	for _, a := range c.Actions {
 		q.AddActions(a, data)

@@ -16,6 +16,7 @@ var TestCommand = Command{
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "test passed! :3"}},
 	QueueName:   "default",
 	Blocking:    false,
+	Active:      false,
 }
 
 var DiscordLink = Command{
@@ -26,6 +27,7 @@ var DiscordLink = Command{
 	Actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.ReplyToMessage{}},
 	QueueName:   "default",
 	Blocking:    false,
+	Active:      true,
 }
 
 var Lurk = Command{
@@ -36,6 +38,7 @@ var Lurk = Command{
 	Actions:     []action.Action{&actions.CreateLurkText{}, &actions.SendMessage{}},
 	QueueName:   "default",
 	Blocking:    false,
+	Active:      true,
 }
 
 var CommandsCommand = Command{
@@ -46,6 +49,7 @@ var CommandsCommand = Command{
 	Actions:     []action.Action{&actions.SendMessage{Message: "Check out all my wondefull commands :3 (lazyturtle33.live/commands)"}},
 	QueueName:   "default",
 	Blocking:    false,
+	Active:      true,
 }
 
 var CommandTriggers = map[string]*Command{}
