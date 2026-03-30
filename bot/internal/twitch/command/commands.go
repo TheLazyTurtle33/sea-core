@@ -52,12 +52,24 @@ var CommandsCommand = Command{
 	Active:      true,
 }
 
+var KofiCommand = Command{
+	Name:        "Ko-fi",
+	Triggers:    []string{"!kofi", "!ko-fi", "!tts"},
+	Description: "Get the Ko-fi link. Used for TTS as well.",
+	Usage:       "!kofi",
+	Actions:     []action.Action{&actions.ReplyToMessage{Message: "If you'd like to support me (or send a TTS) chu can do that here ^w^ : https://ko-fi.com/thelazyturtle33"}},
+	QueueName:   "default",
+	Blocking:    false,
+	Active:      true,
+}
+
 var CommandTriggers = map[string]*Command{}
 var Commands = []*Command{
 	&TestCommand,
 	&DiscordLink,
 	&Lurk,
 	&CommandsCommand,
+	&KofiCommand,
 }
 
 func RegisterCommands() {

@@ -1,6 +1,8 @@
 services:
   web:
-    build: ./web
+    build:
+      context: .          # repo root — now Docker can see /shared
+      dockerfile: web/Dockerfile
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -8,7 +10,9 @@ services:
       - ./data/web:/app/data
 
   bot:
-    build: ./bot
+    build:
+      context: .          # repo root — now Docker can see /shared
+      dockerfile: bot/Dockerfile
     restart: unless-stopped
     volumes:
       - ./data/bot:/app/data

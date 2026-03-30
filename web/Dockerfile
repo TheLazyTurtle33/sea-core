@@ -1,14 +1,14 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26.1-alpine AS builder
 WORKDIR /app
-COPY go.mod ./
-RUN go mod download
-COPY . .
+# COPY web/go.mod web/go.sum* ./web/
+COPY web/ ./web/
+COPY shared/ ./shared/
+RUN cd web && go mod download
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -o web ./cmd/web
+    cd web && go build -o /app/bin/web ./cmd/web
 
 FROM alpine:latest
 WORKDIR /app
-COPY --from=builder /app/web .
+COPY --from=builder /app/bin/web .
 EXPOSE 8080
 CMD ["./web"]

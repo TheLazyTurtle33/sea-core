@@ -34,11 +34,13 @@ func (a *CreateDiscordInvite) Run(v ...any) action.Flags {
 		flags.DataForNextAction = "YESSS join the server >:3 (" + InviteLink + ")"
 		return flags
 	case nil:
+		logger.Debug("Discord actoin called.", "last chatter id", context.Get().LastChat.ChatterUserID, "bot id", context.Get().GetBot().Id)
 		if context.Get().LastChat.ChatterUserID != context.Get().GetBot().Id {
 			flags.DataForNextAction = "Come check out the discord if ya wanna hang after stream ^w^ (" + InviteLink + ")"
 		} else {
 			logger.Log("Last Message was from bot, sleeping")
 			flags.Pause = action.Flag{Active: true, IntData: 60 * 5}
+			flags.Skip = action.Flag{Active: true, IntData: 1}
 		}
 		return flags
 	default:

@@ -1,14 +1,14 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26.1-alpine AS builder
 WORKDIR /app
-COPY go.mod ./
-RUN go mod download
-COPY . .
+COPY bot/go.mod bot/go.sum* ./bot/
+COPY shared/ ./shared/
+RUN cd bot && go mod download
+COPY bot/ ./bot/
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -o bot ./cmd/bot
+    cd bot && go build -o /app/bin/bot ./cmd/bot
 
 FROM alpine:latest
 WORKDIR /app
-COPY --from=builder /app/bot .
+COPY --from=builder /app/bin/bot .
 EXPOSE 8080
 CMD ["./bot"]
