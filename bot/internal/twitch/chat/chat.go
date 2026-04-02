@@ -2,7 +2,6 @@ package chat
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
@@ -58,15 +57,14 @@ func parseForHello(data datatypes.ChatMessageData) {
 	if data.ChatterUserLogin == context.Get().GetBot().Login {
 		return
 	}
-	words := strings.Split(strings.ToLower(data.Message.Text), " ")
 	var helloFound, botMentioned, mean bool
 
-	for _, word := range words {
-		if slices.Contains(hellos, word) {
+	for _, word := range data.Message.Fragments {
+		if slices.Contains(hellos, word.Text) {
 			helloFound = true
 		}
 		for _, botName := range botNames {
-			if strings.Contains(word, botName.name) {
+			if word.Text == botName.name {
 				botMentioned = true
 				mean = botName.mean
 				break

@@ -10,6 +10,7 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/chat"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
 )
 
 const webhookCallbackUrl = "https://lazyturtle33.live/eventsub"
@@ -75,6 +76,7 @@ func Subscribe(eventType, version string, condition Condition) error {
 }
 
 func HandleNotification(notification *EventNotification) {
+	logger.Debug("received eventsub notification", "subscription", notification.Subscription, "event", string(notification.Event))
 	switch notification.Subscription.Type {
 	case "channel.chat.message":
 		var data datatypes.ChatMessageData
@@ -83,6 +85,13 @@ func HandleNotification(notification *EventNotification) {
 			return
 		}
 		chat.HandleMessage(data)
+	case "channel.channel_points_custom_reward_redemption.add":
+		var data datatypes.RedemptionData
+		if err := json.Unmarshal(notification.Event, &data); err != nil {
+			logger.Error(err, "failed to unmarshal event")
+			return
+		}
+		redeems.HandleRedemption(data)
 	default:
 		logger.Warn("unknown event type", "event", notification.Subscription.Type)
 	}
