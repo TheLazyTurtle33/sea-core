@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
@@ -86,6 +87,60 @@ func (a *SendMessage) Run(v ...any) action.Flags {
 }
 
 func (a *SendMessage) OnAdd(v ...any) action.Flags {
+	flags := action.Flags{}
+	return flags
+}
+
+type Delay struct {
+	action.Action
+	Duration time.Duration
+}
+
+func (a *Delay) Run(v ...any) action.Flags {
+	flags := action.Flags{}
+	if len(v) == 0 {
+		flags.Error = fmt.Errorf("no data provided")
+		return flags
+	}
+	if a.Duration == 0 {
+		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+			flags.Error = fmt.Errorf("no duration provided")
+			return flags
+		}
+		a.Duration = time.Duration(v[0].(int))
+	}
+	time.Sleep(a.Duration)
+	return flags
+}
+
+func (a *Delay) OnAdd(v ...any) action.Flags {
+	flags := action.Flags{}
+	return flags
+}
+
+type Log struct {
+	action.Action
+	Message string
+}
+
+func (a *Log) Run(v ...any) action.Flags {
+	flags := action.Flags{}
+	if len(v) == 0 {
+		flags.Error = fmt.Errorf("no data provided")
+		return flags
+	}
+	if a.Message == "" {
+		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+			flags.Error = fmt.Errorf("no message provided")
+			return flags
+		}
+		a.Message = v[0].(string)
+	}
+	fmt.Println(a.Message)
+	return flags
+}
+
+func (a *Log) OnAdd(v ...any) action.Flags {
 	flags := action.Flags{}
 	return flags
 }
