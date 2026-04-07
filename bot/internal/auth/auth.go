@@ -27,11 +27,11 @@ func New() *Auth {
 	a := &Auth{}
 	secret := file.New("/app/data/secret.json").Read()
 	if secret == nil {
-		logger.Error(nil, "secret.json is required. look at secret.json.example for an example")
+		logger.Error("secret.json is required. look at secret.json.example for an example", nil)
 	}
 	err := json.Unmarshal(secret, a)
 	if err != nil {
-		logger.Error(err, "failed to unmarshal secret.json")
+		logger.Error("failed to unmarshal secret.json", err)
 	}
 	return a
 }
@@ -53,18 +53,18 @@ func (a *Auth) SetOauthToken(code string) {
 		"redirect_uri":  {redirectUrl},
 	})
 	if err != nil {
-		logger.Error(err, "failed to get oauth token")
+		logger.Error("failed to get oauth token", err)
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error(err, "failed to read response body")
+		logger.Error("failed to read response body", err)
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		logger.Error(err, "failed to unmarshal response body")
+		logger.Error("failed to unmarshal response body", err)
 		return
 	}
 	token := data["access_token"].(string)
@@ -116,18 +116,18 @@ func (a *Auth) RefreshToken(tokenType string) {
 		"grant_type":    {"refresh_token"},
 	})
 	if err != nil {
-		logger.Error(err, "failed to refresh token")
+		logger.Error("failed to refresh token", err)
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error(err, "failed to read response body")
+		logger.Error("failed to read response body", err)
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		logger.Error(err, "failed to unmarshal response body")
+		logger.Error("failed to unmarshal response body", err)
 		return
 	}
 	token := data["access_token"].(string)
@@ -149,18 +149,18 @@ func (a *Auth) RefreshAppAccessToken() {
 		"grant_type":    {"client_credentials"},
 	})
 	if err != nil {
-		logger.Error(err, "failed to refresh app access token")
+		logger.Error("failed to refresh app access token", err)
 		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error(err, "failed to read response body")
+		logger.Error("failed to read response body", err)
 		return
 	}
 	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
-		logger.Error(err, "failed to unmarshal response body")
+		logger.Error("failed to unmarshal response body", err)
 		return
 	}
 	a.AppAccessToken = data["access_token"].(string)
@@ -196,7 +196,7 @@ func (a *Auth) Save() {
 func (a *Auth) Export() []byte {
 	out, err := json.Marshal(a)
 	if err != nil {
-		logger.Error(err, "failed to marshal auth")
+		logger.Error("failed to marshal auth", err)
 		return nil
 	}
 	return out

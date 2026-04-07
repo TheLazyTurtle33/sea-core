@@ -93,7 +93,7 @@ func (q *Queue) runActions(act action.Action, data any) {
 
 	flags := act.Run(q.actionDataNext, data)
 	if flags.Error != nil {
-		logger.Error(flags.Error, "error running action")
+		logger.Error("error running action", flags.Error)
 		return
 	}
 	if flags.Lock.Active {

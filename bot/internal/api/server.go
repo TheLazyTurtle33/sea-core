@@ -63,7 +63,7 @@ func HandleNotification(w http.ResponseWriter, r *http.Request) {
 	}
 	var notification eventsub.EventNotification
 	if err := json.Unmarshal(body, &notification); err != nil {
-		logger.Error(err, "failed to unmarshal body")
+		logger.Error("failed to unmarshal body", err)
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
@@ -86,6 +86,6 @@ func Start() {
 	http.HandleFunc("/internal/commands", HandleGetCommands)
 	logger.Log("bot internal API listening on :9090")
 	if err := http.ListenAndServe(":9090", nil); err != nil {
-		logger.Error(err, "failed to start internal API")
+		logger.Error("failed to start internal API", err)
 	}
 }

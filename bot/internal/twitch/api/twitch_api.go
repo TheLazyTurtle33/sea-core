@@ -67,11 +67,15 @@ func (t *TwitchAPI) SendReply(message, parentMessageID string) ([]byte, error) {
 func (t *TwitchAPI) SendAnnouncement(message string, color string) ([]byte, error) {
 	return t.Post(fmt.Sprintf("/chat/announcements?broadcaster_id=%s,moderator_id=%s", context.Get().GetBroadcaster().Id, t.id), fmt.Sprintf(`{"message": "%s", "color": "%s"}`, message, color))
 }
+
+
+
+
 func (t *TwitchAPI) request(endpoint, method, bodyType string, data io.Reader) (*http.Response, error) {
 
 	req, err := http.NewRequest(method, baseURL+endpoint, data)
 	if err != nil {
-		logger.Error(err, "failed to create request")
+		logger.Error("failed to create request", err)
 		return nil, err
 	}
 	req.Header.Set("Client-ID", context.Get().Auth.GetClientId())

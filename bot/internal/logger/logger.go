@@ -56,10 +56,12 @@ func Warn(msg string, args ...any) {
 	}
 }
 
-func Error(err error, args ...any) {
+func Error(msg string, err error, args ...any) {
 	CheckLogFileData()
 	for _, l := range Loggers {
-		l.Error(err.Error(), args...)
+		argsout := []any{"error", err}
+		argsout = append(argsout, args...)
+		l.Error(msg, argsout...)
 	}
 }
 

@@ -76,19 +76,18 @@ func Subscribe(eventType, version string, condition Condition) error {
 }
 
 func HandleNotification(notification *EventNotification) {
-	logger.Debug("received eventsub notification", "subscription", notification.Subscription, "event", string(notification.Event))
 	switch notification.Subscription.Type {
 	case "channel.chat.message":
 		var data datatypes.ChatMessageData
 		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			logger.Error(err, "failed to unmarshal event")
+			logger.Error("failed to unmarshal event", err)
 			return
 		}
 		chat.HandleMessage(data)
 	case "channel.channel_points_custom_reward_redemption.add":
 		var data datatypes.RedemptionData
 		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			logger.Error(err, "failed to unmarshal event")
+			logger.Error("failed to unmarshal event", err)
 			return
 		}
 		redeems.HandleRedemption(data)

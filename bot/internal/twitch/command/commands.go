@@ -90,7 +90,7 @@ func GetCommand(trigger string) *Command {
 func GetCommandsJson() []byte {
 	out, err := json.Marshal(Commands)
 	if err != nil {
-		logger.Error(err, "failed to marshal commands")
+		logger.Error("failed to marshal commands", err)
 		return nil
 	}
 	return out

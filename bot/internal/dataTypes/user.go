@@ -26,7 +26,7 @@ type User struct {
 func NewUser(auth, clientId string) *User {
 	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
 	if err != nil {
-		logger.Error(err, "failed to create request")
+		logger.Error("failed to create request", err)
 		return nil
 	}
 	req.Header.Set("Client-ID", clientId)
@@ -35,20 +35,20 @@ func NewUser(auth, clientId string) *User {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Error(err, "failed to do request")
+		logger.Error("failed to do request", err)
 		return nil
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error(err, "failed to read response body")
+		logger.Error("failed to read response body", err)
 		return nil
 	}
 	var data struct {
 		Data []User `json:"data"`
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		logger.Error(err, "failed to unmarshal response body")
+		logger.Error("failed to unmarshal response body", err)
 		return nil
 	}
 	if len(data.Data) == 0 {

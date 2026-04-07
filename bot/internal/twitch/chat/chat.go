@@ -85,7 +85,7 @@ func parseForHello(data datatypes.ChatMessageData) {
 	if helloFound && botMentioned {
 		_, err := api.As("bot").SendReply(message, data.MessageID)
 		if err != nil {
-			logger.Error(err, "failed to send reply")
+			logger.Error("failed to send reply", err)
 			return
 		}
 	}
