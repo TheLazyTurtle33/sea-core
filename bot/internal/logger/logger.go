@@ -66,11 +66,15 @@ func Error(msg string, err error, args ...any) {
 }
 
 func Debug(msg string, args ...any) {
+	for _, l := range Loggers {
+		DebugToLogger(l, msg, args...)
+	}
+}
+
+func DebugToLogger(logger *slog.Logger, msg string, args ...any) {
 	CheckLogFileData()
 	if file.Exists("/app/data/debug") {
-		for _, l := range Loggers {
-			l.Debug(msg, args...)
-		}
+		logger.Debug(msg, args...)
 	}
 }
 
@@ -104,12 +108,17 @@ func CreateFileLogger() {
 	}
 	logFileHandle = f
 
-	for i, l := range Loggers {
-		if l == FileLogger {
-			FileLogger = slog.New(slog.NewTextHandler(f, nil))
-			Loggers[i] = FileLogger
+	if FileLogger == nil {
+		FileLogger = slog.New(slog.NewTextHandler(f, nil))
+		Log("Created new log file")
+	} else {
+		for i, l := range Loggers {
+			if l == FileLogger {
+				FileLogger = slog.New(slog.NewTextHandler(f, nil))
+				Loggers[i] = FileLogger
+			}
+			l.Info("Created new log file")
 		}
-		l.Info("Created new log file logger")
 	}
 
 }
