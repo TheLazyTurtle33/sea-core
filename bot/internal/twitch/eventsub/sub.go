@@ -40,12 +40,12 @@ type SubEvents struct {
 func SubscribeAll() {
 	body, err := twitchapi.As("app").Get("/eventsub/subscriptions")
 	if err != nil {
-		logger.Error(err, "failed to get subscriptions")
+		logger.Error("failed to get subscriptions", err)
 		return
 	}
 	var subEvents SubEvents
 	if err := json.Unmarshal(body, &subEvents); err != nil {
-		logger.Error(err, "failed to unmarshal subscriptions")
+		logger.Error("failed to unmarshal subscriptions", err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func subChat() {
 		"user_id":             context.Get().GetBot().Id,
 	})
 	if err != nil {
-		logger.Error(err, "failed to subscribe to chat messages")
+		logger.Error("failed to subscribe to chat messages", err)
 	}
 }
 
@@ -93,6 +93,6 @@ func subRedemptions() {
 		"broadcaster_user_id": context.Get().GetBroadcaster().Id,
 	})
 	if err != nil {
-		logger.Error(err, "failed to subscribe to redemptions")
+		logger.Error("failed to subscribe to redemptions", err)
 	}
 }

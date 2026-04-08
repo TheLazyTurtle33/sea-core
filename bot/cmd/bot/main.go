@@ -11,6 +11,7 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 
 	eventsub.SubscribeAll()
 	queue.StartUp()
+
+	redeems.RegisterRedeems()
 
 	// if err := obs.Init(); err != nil {
 	// 	logger.Error(err, "failed to connect to OBS")

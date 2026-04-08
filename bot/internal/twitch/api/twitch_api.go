@@ -53,6 +53,25 @@ func (t *TwitchAPI) Post(endpoint, json string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
+func (t *TwitchAPI) Patch(endpoint, json string) ([]byte, error) {
+	resp, err := t.request(endpoint, "PATCH", "application/json", strings.NewReader(json))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
+}
+
+func (t *TwitchAPI) Delete(endpoint string) ([]byte, error) {
+	resp, err := t.request(endpoint, "DELETE", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 	return io.ReadAll(resp.Body)
 }
 
@@ -67,9 +86,6 @@ func (t *TwitchAPI) SendReply(message, parentMessageID string) ([]byte, error) {
 func (t *TwitchAPI) SendAnnouncement(message string, color string) ([]byte, error) {
 	return t.Post(fmt.Sprintf("/chat/announcements?broadcaster_id=%s,moderator_id=%s", context.Get().GetBroadcaster().Id, t.id), fmt.Sprintf(`{"message": "%s", "color": "%s"}`, message, color))
 }
-
-
-
 
 func (t *TwitchAPI) request(endpoint, method, bodyType string, data io.Reader) (*http.Response, error) {
 

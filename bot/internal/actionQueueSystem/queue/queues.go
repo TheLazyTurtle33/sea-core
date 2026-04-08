@@ -15,6 +15,11 @@ var DefaultQueue = Queue{
 	repeatDelay: 0,
 }
 
+var RedeemsQueue = Queue{
+	name:       "redeems",
+	persistent: true,
+}
+
 var DiscordQueue = Queue{
 	name:        "Discord",
 	locked:      true,
@@ -24,7 +29,11 @@ var DiscordQueue = Queue{
 	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
 }
 
-var Queues = []*Queue{&DefaultQueue, &DiscordQueue}
+var Queues = []*Queue{
+	&DefaultQueue,
+	&DiscordQueue,
+	&RedeemsQueue,
+}
 
 func GetQueue(name string) *Queue {
 	for _, q := range Queues {
