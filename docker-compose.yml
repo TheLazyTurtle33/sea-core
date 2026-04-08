@@ -16,6 +16,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/bot:/app/data
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   cloudflared:
     image: cloudflare/cloudflared:latest
