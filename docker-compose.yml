@@ -21,6 +21,7 @@ services:
 
   cloudflared:
     image: cloudflare/cloudflared:latest
+    network_mode: host # only have on when wanna ssh
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
 
@@ -36,6 +37,26 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+
+  piper:
+      image: python:3.11-slim
+      restart: unless-stopped
+      volumes:
+        - ./data/piper/models:/models
+      working_dir: /app
+      command: >
+        sh -c "pip install piper-tts flask --quiet &&
+              python -m piper.http_server --model /models/en_US-lessac-medium.onnx --data-dir /models"
+      ports:
+        - "5000:5000"
+
+  # vosk:
+  #   image: alphacep/kaldi-en:latest
+  #   container_name: vosk
+  #   user: root
+  #   volumes:
+  #     - ./data/vosk/models/vosk-model-en-us-0.22:/opt/vosk-model-en/model
+  #   restart: unless-stopped
 
 volumes:
   pg_data:
