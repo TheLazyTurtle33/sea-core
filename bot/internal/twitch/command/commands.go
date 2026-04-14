@@ -54,13 +54,20 @@ var CommandsCommand = Command{
 
 var KofiCommand = Command{
 	Name:        "Ko-fi",
-	Triggers:    []string{"!kofi", "!ko-fi", "!tts"},
+	Triggers:    []string{"!kofi", "!ko-fi"},
 	Description: "Get the Ko-fi link. Used for TTS as well.",
 	Usage:       "!kofi",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "If you'd like to support me (or send a TTS) chu can do that here ^w^ : https://ko-fi.com/thelazyturtle33"}},
 	QueueName:   "default",
 	Blocking:    false,
 	Active:      true,
+}
+
+var TTSCommand = Command{
+	Name:     "TTS",
+	Triggers: []string{"!tts"},
+	Actions:  []action.Action{&actions.ReplyToMessage{Message: "still making TTS X.X try again when it ready :3 (or use !kofi for old tts)"}},
+	Active:   true,
 }
 
 var CommandTriggers = map[string]*Command{}

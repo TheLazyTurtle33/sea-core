@@ -7,6 +7,7 @@ require github.com/TheLazyTurtle33/sea-core/shared v0.0.0
 replace github.com/TheLazyTurtle33/sea-core/shared => ../shared
 
 require (
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/lib/pq v1.12.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
 )

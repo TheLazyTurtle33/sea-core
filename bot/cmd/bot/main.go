@@ -10,6 +10,7 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
 )
@@ -25,6 +26,10 @@ func main() {
 	queue.StartUp()
 
 	redeems.RegisterRedeems()
+
+	tts.Test()
+
+	// stt.Test()
 
 	// if err := obs.Init(); err != nil {
 	// 	logger.Error(err, "failed to connect to OBS")
