@@ -70,7 +70,7 @@ func RegisterRedeems() {
 }
 
 func RequestRedeems() {
-	resp, err := twitchapi.As("user").Get("/channel_points/custom_rewards?broadcaster_id=" + context.Get().GetBroadcaster().Id)
+	resp, err := twitchapi.AsUser().Get("/channel_points/custom_rewards?broadcaster_id=" + context.Get().GetBroadcaster().Id)
 	if err != nil {
 		logger.Error("failed to request redeems", err)
 		return
@@ -104,7 +104,7 @@ func CreateRedeem(redeem Redeem) string {
 		logger.Error("failed to marshal redeem", err)
 		return ""
 	}
-	resp, err := twitchapi.As("user").Post("/channel_points/custom_rewards?broadcaster_id="+context.Get().GetBroadcaster().Id, string(jsonData))
+	resp, err := twitchapi.AsUser().Post("/channel_points/custom_rewards?broadcaster_id="+context.Get().GetBroadcaster().Id, string(jsonData))
 	if err != nil {
 		logger.Error("failed to create redeem", err)
 		return ""
@@ -132,7 +132,7 @@ func UpdateRedeem(id string, redeem Redeem) {
 		logger.Error("failed to marshal redeem", err)
 		return
 	}
-	_, err = twitchapi.As("user").Patch("/channel_points/custom_rewards?broadcaster_id="+context.Get().GetBroadcaster().Id+"&id="+id, string(jsonData))
+	_, err = twitchapi.AsUser().Patch("/channel_points/custom_rewards?broadcaster_id="+context.Get().GetBroadcaster().Id+"&id="+id, string(jsonData))
 	if err != nil {
 		logger.Error("failed to update redeem", err)
 		return
@@ -206,7 +206,7 @@ func DisableRedeem(id string) {
 }
 
 func DeleteRedeem(id string) {
-	body, err := twitchapi.As("user").Delete("/channel_points/custom_rewards?broadcaster_id=" + context.Get().GetBroadcaster().Id + "&id=" + id)
+	body, err := twitchapi.AsUser().Delete("/channel_points/custom_rewards?broadcaster_id=" + context.Get().GetBroadcaster().Id + "&id=" + id)
 	if err != nil {
 		logger.Error("failed to delete redeem", err)
 		return

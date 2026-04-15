@@ -17,25 +17,25 @@ type TwitchAPI struct {
 	id   string
 }
 
-func As(as string) *TwitchAPI {
-	switch as {
-	case "bot":
-		return &TwitchAPI{
-			auth: context.Get().Auth.GetBotOauthToken(),
-			id:   context.Get().GetBot().Id,
-		}
-	case "user":
-		return &TwitchAPI{
-			auth: context.Get().Auth.GetUserOauthToken(),
-			id:   context.Get().GetBroadcaster().Id,
-		}
-	case "app":
-		return &TwitchAPI{
-			auth: context.Get().Auth.GetAppAccessToken(),
-			id:   "",
-		}
+func AsBot() *TwitchAPI {
+	return &TwitchAPI{
+		auth: context.Get().Auth.GetBotOauthToken(),
+		id:   context.Get().GetBot().Id,
 	}
-	return nil
+}
+
+func AsUser() *TwitchAPI {
+	return &TwitchAPI{
+		auth: context.Get().Auth.GetUserOauthToken(),
+		id:   context.Get().GetBroadcaster().Id,
+	}
+}
+
+func AsApp() *TwitchAPI {
+	return &TwitchAPI{
+		auth: context.Get().Auth.GetAppAccessToken(),
+		id:   "",
+	}
 }
 
 func (t *TwitchAPI) Get(endpoint string) ([]byte, error) {
@@ -44,7 +44,16 @@ func (t *TwitchAPI) Get(endpoint string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("%s", string(body))
+	}
+
+	return body, err
 }
 
 func (t *TwitchAPI) Post(endpoint, json string) ([]byte, error) {
@@ -54,7 +63,16 @@ func (t *TwitchAPI) Post(endpoint, json string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	return io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("%s", string(body))
+	}
+
+	return body, err
 }
 
 func (t *TwitchAPI) Patch(endpoint, json string) ([]byte, error) {
@@ -63,7 +81,16 @@ func (t *TwitchAPI) Patch(endpoint, json string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("%s", string(body))
+	}
+
+	return body, err
 }
 
 func (t *TwitchAPI) Delete(endpoint string) ([]byte, error) {
@@ -72,7 +99,17 @@ func (t *TwitchAPI) Delete(endpoint string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("%s", string(body))
+	}
+
+	return body, err
 }
 
 func (t *TwitchAPI) SendMessage(message string) ([]byte, error) {
@@ -84,7 +121,7 @@ func (t *TwitchAPI) SendReply(message, parentMessageID string) ([]byte, error) {
 }
 
 func (t *TwitchAPI) SendAnnouncement(message string, color string) ([]byte, error) {
-	return t.Post(fmt.Sprintf("/chat/announcements?broadcaster_id=%s,moderator_id=%s", context.Get().GetBroadcaster().Id, t.id), fmt.Sprintf(`{"message": "%s", "color": "%s"}`, message, color))
+	return t.Post(fmt.Sprintf("/chat/announcements?broadcaster_id=%s&moderator_id=%s", context.Get().GetBroadcaster().Id, t.id), fmt.Sprintf(`{"message": "%s", "color": "%s"}`, message, color))
 }
 
 func (t *TwitchAPI) request(endpoint, method, bodyType string, data io.Reader) (*http.Response, error) {

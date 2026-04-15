@@ -66,12 +66,12 @@ func Subscribe(eventType, version string, condition Condition) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal subscription: %w", err)
 	}
-	var body2 []byte
-	body2, err = twitchapi.As("app").Post("/eventsub/subscriptions", string(body))
+
+	_, err = twitchapi.AsApp().Post("/eventsub/subscriptions", string(body))
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to %s: %w", eventType, err)
 	}
-	logger.Log("subscribed to %s", "event", eventType, "body", string(body2))
+	logger.Log("subscribed to event", "event", eventType)
 	return nil
 }
 

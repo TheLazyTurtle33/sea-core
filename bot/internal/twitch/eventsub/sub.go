@@ -2,6 +2,7 @@ package eventsub
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
@@ -9,10 +10,12 @@ import (
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 )
 
-var eventsToSubscribeTo []string = []string{
+var eventsToSubscribeTo = []string{
 	"channel.chat.message",
 	"channel.channel_points_custom_reward_redemption.add",
 }
+
+var eventsToUnSubscribeFrom = []string{}
 
 type SubEvents struct {
 	Data []struct {
@@ -38,11 +41,12 @@ type SubEvents struct {
 }
 
 func SubscribeAll() {
-	body, err := twitchapi.As("app").Get("/eventsub/subscriptions")
+	body, err := twitchapi.AsApp().Get("/eventsub/subscriptions")
 	if err != nil {
 		logger.Error("failed to get subscriptions", err)
 		return
 	}
+	logger.Log("sub events", "body", string(body))
 	var subEvents SubEvents
 	if err := json.Unmarshal(body, &subEvents); err != nil {
 		logger.Error("failed to unmarshal subscriptions", err)
@@ -51,9 +55,23 @@ func SubscribeAll() {
 
 	for _, sub := range subEvents.Data {
 		if slices.Contains(eventsToSubscribeTo, sub.Type) {
-			eventsToSubscribeTo = slices.Delete(eventsToSubscribeTo, slices.Index(eventsToSubscribeTo, sub.Type), slices.Index(eventsToSubscribeTo, sub.Type)+1)
+			if sub.Status == "enabled" {
+				eventsToSubscribeTo = slices.Delete(eventsToSubscribeTo, slices.Index(eventsToSubscribeTo, sub.Type), slices.Index(eventsToSubscribeTo, sub.Type)+1)
+			} else {
+				logger.Log("removing non enabled event", "event", sub.Type, "status", sub.Status, "eventID", sub.ID)
+				eventsToUnSubscribeFrom = append(eventsToUnSubscribeFrom, sub.ID)
+			}
 		}
 	}
+
+	for _, eventID := range eventsToUnSubscribeFrom {
+		body, err := twitchapi.AsUser().Delete(fmt.Sprintf("/eventsub/subscriptions?id=%s", eventID))
+		if err != nil {
+			logger.Error("Faild to delete old event", err, "eventID", eventID)
+		}
+		logger.Log("event sub body", "body", string(body))
+	}
+
 	for _, event := range eventsToSubscribeTo {
 		switch event {
 		case "channel.chat.message":
@@ -64,6 +82,7 @@ func SubscribeAll() {
 			logger.Warn("unknown subscription type", "type", event)
 		}
 	}
+
 }
 
 func subChat() {

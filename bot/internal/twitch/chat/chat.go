@@ -2,6 +2,7 @@ package chat
 
 import (
 	"slices"
+	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
@@ -83,7 +84,7 @@ func parseForHello(data datatypes.ChatMessageData) {
 	}
 
 	if helloFound && botMentioned {
-		_, err := api.As("bot").SendReply(message, data.MessageID)
+		_, err := api.AsBot().SendReply(message, data.MessageID)
 		if err != nil {
 			logger.Error("failed to send reply", err)
 			return
@@ -94,7 +95,7 @@ func parseForHello(data datatypes.ChatMessageData) {
 
 func parseForCommand(data datatypes.ChatMessageData) {
 	command.RegisterCommands()
-	if com := command.GetCommand(data.Message.Fragments[0].Text); com != nil {
+	if com := command.GetCommand(strings.TrimSpace(strings.ToLower(data.Message.Fragments[0].Text))); com != nil {
 		logger.Log("found command", "command", com.Name)
 		com.AddActions(data)
 	}
