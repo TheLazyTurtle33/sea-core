@@ -63,19 +63,18 @@ type CompleteRedeemAction struct {
 	action.Action
 }
 
-func (a *CompleteRedeemAction) Run(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a *CompleteRedeemAction) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
 	}
-	v = v[1:] // remove data passed from previous action if there, else remove nil
 	data, ok := v[0].(datatypes.RedemptionData)
 	if !ok {
 		flags.Error = fmt.Errorf("expected RedemptionData, got %T", v[0])
 		return flags
 	}
-	_, err := twitchapi.As("user").Patch("/channel_points/custom_rewards/redemptions?broadcaster_id="+context.Get().GetBroadcaster().Id+"&reward_id="+data.Reward.ID+"&id="+data.ID, `{"status":"FULFILLED"}`)
+	_, err := twitchapi.AsUser().Patch("/channel_points/custom_rewards/redemptions?broadcaster_id="+context.Get().GetBroadcaster().Id+"&reward_id="+data.Reward.ID+"&id="+data.ID, `{"status":"FULFILLED"}`)
 	if err != nil {
 		flags.Error = err
 		return flags

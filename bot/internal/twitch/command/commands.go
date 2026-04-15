@@ -14,9 +14,10 @@ var TestCommand = Command{
 	Description: "A test command.",
 	Usage:       "!test",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "test passed! :3"}},
+	AlowedUsers: []string{"everyone"},
 	QueueName:   "default",
 	Blocking:    false,
-	Active:      false,
+	Active:      true,
 }
 
 var DiscordLink = Command{
@@ -24,9 +25,15 @@ var DiscordLink = Command{
 	Triggers:    []string{"!discord", "!dc"},
 	Description: "Get the discord invite link.",
 	Usage:       "!discord",
-	Actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.ReplyToMessage{}},
-	QueueName:   "default",
-	Blocking:    false,
+	Actions:     []action.Action{&actions.CreateDiscordInvite{}},
+	AlowedUsers: []string{"everyone"},
+	Active:      true,
+}
+var ShoutOutCommand = Command{
+	Name:        "Shout out",
+	Triggers:    []string{"!so"},
+	Actions:     []action.Action{&actions.ShoutOut{}},
+	AlowedUsers: []string{"moderator"},
 	Active:      true,
 }
 
@@ -36,8 +43,7 @@ var Lurk = Command{
 	Description: "Thanks the viewer for lurking.",
 	Usage:       "!lurk",
 	Actions:     []action.Action{&actions.CreateLurkText{}, &actions.SendMessage{}},
-	QueueName:   "default",
-	Blocking:    false,
+	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -47,8 +53,7 @@ var CommandsCommand = Command{
 	Description: "Gives a link to the webpage with all the commands",
 	Usage:       "!commands",
 	Actions:     []action.Action{&actions.SendMessage{Message: "Check out all my wondefull commands :3 (lazyturtle33.live/commands)"}},
-	QueueName:   "default",
-	Blocking:    false,
+	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -58,8 +63,7 @@ var KofiCommand = Command{
 	Description: "Get the Ko-fi link. Used for TTS as well.",
 	Usage:       "!kofi",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "If you'd like to support me (or send a TTS) chu can do that here ^w^ : https://ko-fi.com/thelazyturtle33"}},
-	QueueName:   "default",
-	Blocking:    false,
+	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -77,6 +81,8 @@ var Commands = []*Command{
 	&Lurk,
 	&CommandsCommand,
 	&KofiCommand,
+	&TTSCommand,
+	&ShoutOutCommand,
 }
 
 func RegisterCommands() {

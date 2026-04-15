@@ -3,7 +3,6 @@ package actions
 import (
 	"fmt"
 	"log/slog"
-	"reflect"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
@@ -16,8 +15,8 @@ type ExampleActoin struct {
 	action.Action
 }
 
-func (a *ExampleActoin) Run(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a *ExampleActoin) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	return flags
 }
 
@@ -32,26 +31,26 @@ type ReplyToMessage struct {
 	Message string
 }
 
-func (a *ReplyToMessage) Run(v ...any) action.Flags { // v[0] is the message, v[1] is the CommandData or message is defined at creation, then v[0] is the CommandData
-	flags := action.Flags{}
+func (a *ReplyToMessage) Run(passThough any, v ...any) action.Flags { // v[0] is the message, v[1] is the CommandData or message is defined at creation, then v[0] is the CommandData
+	flags := action.Flags{PassThrough: passThough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
 	}
 	if a.Message == "" {
-		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+		message, ok := passThough.(string)
+		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
 		}
-		a.Message = v[0].(string)
+		a.Message = message
 	}
-	v = v[1:] // remove message from v if there, else remove nil
 	data, ok := v[0].(datatypes.ChatMessageData)
 	if !ok {
 		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
 		return flags
 	}
-	_, err := twitchapi.As("bot").SendReply(a.Message, data.MessageID)
+	_, err := twitchapi.AsBot().SendReply(a.Message, data.MessageID)
 	if err != nil {
 		flags.Error = err
 	}
@@ -68,20 +67,17 @@ type SendMessage struct {
 	Message string
 }
 
-func (a *SendMessage) Run(v ...any) action.Flags {
-	flags := action.Flags{}
-	if len(v) == 0 {
-		flags.Error = fmt.Errorf("no data provided")
-		return flags
-	}
+func (a *SendMessage) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	if a.Message == "" {
-		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+		message, ok := passThough.(string)
+		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
 		}
-		a.Message = v[0].(string)
+		a.Message = message
 	}
-	_, err := twitchapi.As("bot").SendMessage(a.Message)
+	_, err := twitchapi.AsBot().SendMessage(a.Message)
 	if err != nil {
 		flags.Error = err
 	}
@@ -93,23 +89,62 @@ func (a *SendMessage) OnAdd(v ...any) action.Flags {
 	return flags
 }
 
+type SendAnnouncement struct {
+	action.Action
+	Message string
+	Color   string
+}
+
+func (a *SendAnnouncement) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
+	if a.Message == "" {
+		message, ok := passThough.(string)
+		if ok {
+			a.Message = message
+		} else {
+			announcement, ok := passThough.([]string)
+			if !ok || len(announcement) != 2 {
+				flags.Error = fmt.Errorf("no message or color provided")
+				return flags
+			}
+			a.Message = announcement[0]
+			a.Color = announcement[1]
+		}
+	}
+	if a.Color == "" {
+		a.Color = "primary"
+	}
+	logger.Debug("Sending Announcement", "message", a.Message, "color", a.Color)
+	body, err := twitchapi.AsBot().SendAnnouncement(a.Message, a.Color)
+	if err != nil {
+		flags.Error = err
+		return flags
+	}
+
+	logger.Debug("response", "body", string(body))
+
+	return flags
+}
+
+func (a *SendAnnouncement) OnAdd(v ...any) action.Flags {
+	flags := action.Flags{}
+	return flags
+}
+
 type Delay struct {
 	action.Action
 	Duration time.Duration
 }
 
-func (a *Delay) Run(v ...any) action.Flags {
-	flags := action.Flags{}
-	if len(v) == 0 {
-		flags.Error = fmt.Errorf("no data provided")
-		return flags
-	}
+func (a *Delay) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	if a.Duration == 0 {
-		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+		duration, ok := passThough.(int)
+		if !ok {
 			flags.Error = fmt.Errorf("no duration provided")
 			return flags
 		}
-		a.Duration = time.Duration(v[0].(int))
+		a.Duration = time.Duration(duration * int(time.Second))
 	}
 	time.Sleep(a.Duration)
 	return flags
@@ -152,23 +187,19 @@ type Log struct {
 	Formatter func(data []any) ([]any, error) // optional. if sceeme is LogSceemeCustom, this formatter will be used to format the log message. it takes in the data and returns the formatted data to pass to the logger. if not provided, will pass data as is.
 }
 
-func (a *Log) Run(v ...any) action.Flags {
-	flags := action.Flags{}
-	if len(v) == 0 {
-		flags.Error = fmt.Errorf("no data provided")
-		return flags
-	}
-
+func (a *Log) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	if a.Message == "" {
-		if reflect.TypeOf(v[0]).Kind() != reflect.String {
+		message, ok := passThough.(string)
+		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
 		}
-		a.Message = v[0].(string)
+		a.Message = message
 	}
 
 	if len(a.Data) == 0 {
-		a.Data = v[1:]
+		a.Data = v
 	} else if a.Data == nil {
 		a.Data = []any{}
 	}

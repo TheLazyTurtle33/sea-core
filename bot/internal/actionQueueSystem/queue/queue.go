@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"slices"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
@@ -23,10 +24,22 @@ type Queue struct {
 
 func (q *Queue) AddActions(a action.Action, data any) {
 	if q.locked {
+		logger.Log("Queue Locked!", "queue", q.name)
 		return
 	}
 	q.actions = append(q.actions, a)
 	q.actionData = append(q.actionData, data)
+}
+
+func (q *Queue) AddActionsAtIndex(a action.Action, data any, index int) {
+	if q.locked {
+		logger.Log("Queue Locked!", "queue", q.name)
+		return
+	}
+	logger.Debug("num of actoins", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex)
+	q.actions = slices.Insert(q.actions, index, a)
+	q.actionData = slices.Insert(q.actionData, index, data)
+	logger.Debug("num of actoins post insert", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex)
 }
 
 func (q *Queue) Lock() {
@@ -69,17 +82,20 @@ func (q *Queue) worker() {
 			return
 		}
 
+		q.actionIndex++
+		logger.Debug("running actoin", "queue", q.name, "index", q.actionIndex)
 		if !q.repeating {
 			q.runActions(q.actions[0], q.actionData[0])
 			q.actions = q.actions[1:]
 			q.actionData = q.actionData[1:]
+			q.actionIndex--
+			logger.Debug("index decremented", "queue", q.name, "index", q.actionIndex)
 		} else {
 			var data any
 			if len(q.actionData) > 0 {
-				data = q.actionData[q.actionIndex]
+				data = q.actionData[q.actionIndex-1]
 			}
-			q.runActions(q.actions[q.actionIndex], data)
-			q.actionIndex++
+			q.runActions(q.actions[q.actionIndex-1], data)
 		}
 
 		if len(q.actions) == q.actionIndex {
@@ -93,6 +109,7 @@ func (q *Queue) runActions(act action.Action, data any) {
 
 	flags := act.Run(q.actionDataNext, data)
 	if flags.Error != nil {
+		logger.Debug("actoin had flag Error")
 		logger.Error("error running action", flags.Error)
 		return
 	}
@@ -121,13 +138,29 @@ func (q *Queue) runActions(act action.Action, data any) {
 		}
 	}
 	if flags.AddActions.Active {
+		logger.Debug("actoin had flag Add Actoin")
+
+		ActionData := flags.AddActions.ActionData
+		if dif := len(flags.AddActions.Actions) - len(ActionData); dif > 0 {
+			for range dif {
+				ActionData = append(ActionData, nil)
+			}
+		}
+
 		if flags.AddActions.StringData == "" {
+			logger.Debug("Adding actoins")
 			for i, a := range flags.AddActions.Actions {
-				q.AddActions(a, flags.AddActions.ActionData[i])
+
+				q.AddActionsAtIndex(a, ActionData[i], q.actionIndex+i)
 			}
 		} else {
+			queue := GetQueue(flags.AddActions.StringData)
+			index := queue.actionIndex
 			for i, a := range flags.AddActions.Actions {
-				GetQueue(flags.AddActions.StringData).AddActions(a, flags.AddActions.ActionData[i])
+				if flags.AddActions.IntData != 0 {
+					index = flags.AddActions.IntData
+				}
+				queue.AddActionsAtIndex(a, ActionData[i], index+i)
 			}
 		}
 	}
@@ -145,7 +178,7 @@ func (q *Queue) runActions(act action.Action, data any) {
 			GetQueue(flags.Skip.StringData).Skip(flags.Skip.IntData)
 		}
 	}
-	q.actionDataNext = flags.DataForNextAction
+	q.actionDataNext = flags.PassThrough
 }
 
 func (q *Queue) Skip(skip int) {

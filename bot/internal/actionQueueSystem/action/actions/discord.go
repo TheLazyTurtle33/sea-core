@@ -1,8 +1,6 @@
 package actions
 
 import (
-	"fmt"
-
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
@@ -15,40 +13,56 @@ type CreateDiscordInvite struct {
 
 const InviteLink = "https://discord.gg/GJpybRAEq5"
 
-func (a *CreateDiscordInvite) Run(v ...any) action.Flags {
-	flags := action.Flags{}
-	v = v[1:] // remove pervious action outup data from v
-	if len(v) == 0 {
-		flags.Error = fmt.Errorf("no data provided")
-		return flags
-	}
+func (a *CreateDiscordInvite) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	switch v[0].(type) {
 	case datatypes.ChatMessageData:
 		data := v[0].(datatypes.ChatMessageData)
-		if data.SourceBroadcasterUserID != "" {
-			if data.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
-				flags.DataForNextAction = "Join my Discord as well while your at it ;3 (" + InviteLink + ")"
-				return flags
-			}
-		}
-		flags.DataForNextAction = "YESSS join the server >:3 (" + InviteLink + ")"
-		return flags
-	case nil:
-		logger.Debug("Discord actoin called.", "last chatter id", context.Get().LastChat.ChatterUserID, "bot id", context.Get().GetBot().Id)
-		if context.Get().LastChat.ChatterUserID != context.Get().GetBot().Id {
-			flags.DataForNextAction = "Come check out the discord if ya wanna hang after stream ^w^ (" + InviteLink + ")"
-		} else {
-			logger.Log("Last Message was from bot, sleeping")
-			flags.Pause = action.Flag{Active: true, IntData: 60 * 5}
-			flags.Skip = action.Flag{Active: true, IntData: 1}
-		}
-		return flags
+		return command(flags, data)
 	default:
-		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
-		flags.Skip = action.Flag{Active: true, IntData: 1}
-		return flags
+		return schedualedMessage(flags)
 	}
+}
 
+func command(flags action.Flags, chat datatypes.ChatMessageData) action.Flags {
+	message := "YESSS join the server >:3 (" + InviteLink + ")"
+
+	if chat.SourceBroadcasterUserID != "" {
+		if chat.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
+			message = "Join my Discord as well while your at it ;3 (" + InviteLink + ")"
+		}
+	}
+	flags.AddActions = action.Flag{
+		Active: true,
+		Actions: []action.Action{
+			&ReplyToMessage{Message: message},
+		},
+		ActionData: []any{chat},
+	}
+	return flags
+}
+
+func schedualedMessage(flags action.Flags) action.Flags {
+	logger.Debug("scheduald Discord mesage", "last chatter id", context.Get().LastChat.ChatterUserID, "bot id", context.Get().GetBot().Id)
+	if context.Get().LastChat.ChatterUserID != context.Get().GetBot().Id {
+		flags.AddActions = action.Flag{
+			Active: true,
+			Actions: []action.Action{
+				&SendMessage{Message: "Come check out the discord if ya wanna hang after stream ^w^ (" + InviteLink + ")"},
+			},
+			ActionData: []any{nil},
+		}
+	} else {
+		logger.Log("Last Message was from bot, sleeping")
+		flags.AddActions = action.Flag{
+			Active: true,
+			Actions: []action.Action{
+				&Delay{Duration: 60 * 5},
+			},
+			ActionData: []any{nil},
+		}
+	}
+	return flags
 }
 
 func (a *CreateDiscordInvite) OnAdd(v ...any) action.Flags {

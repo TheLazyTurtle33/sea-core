@@ -6,8 +6,8 @@ type SendTTS struct {
 	action.Action
 }
 
-func (a SendTTS) Run(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a SendTTS) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 
 	return flags
 }

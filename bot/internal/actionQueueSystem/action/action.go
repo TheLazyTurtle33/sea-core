@@ -14,8 +14,8 @@ type Flags struct {
 	Lock   Flag // locks the given queue. if QueueName is "" use curent queue
 	Unlock Flag // unlocks the given queue. if QueueName is "" use curent queue
 
-	AddActions        Flag // add an action at a given queue
-	DataForNextAction any  // data for the next action in the queue
+	AddActions  Flag // add an action at a given queue
+	PassThrough any  // data for the next action in the queue
 
 	StartQueue Flag // tell a given queue to spin up, usefull for non-persistent repeting queues
 	StopQueue  Flag // tell a given queue to spin down, usefull for non-persistent repeting queues. if QueueName is "" use curent queue
@@ -25,6 +25,6 @@ type Flags struct {
 }
 
 type Action interface {
-	Run(v ...any) Flags   // v[0] is the data from the previous action
+	Run(passThough any, v ...any) Flags
 	OnAdd(v ...any) Flags // ran when this action is added to a queue
 }

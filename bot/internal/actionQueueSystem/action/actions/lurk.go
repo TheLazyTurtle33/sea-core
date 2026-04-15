@@ -12,27 +12,24 @@ type CreateLurkText struct {
 	action.Action
 }
 
-func (a *CreateLurkText) Run(v ...any) action.Flags {
-	flags := action.Flags{}
-	v = v[1:] // remove pervious action outup data from v
+func (a *CreateLurkText) Run(passThough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
 	}
-	switch v[0].(type) {
-	case datatypes.ChatMessageData:
-		data := v[0].(datatypes.ChatMessageData)
-		if data.SourceBroadcasterUserID != "" && data.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
-			flags.Skip = action.Flag{Active: true, IntData: 1}
-			return flags
-		}
-		flags.DataForNextAction = "O: thx for the lurk " + data.ChatterUserName + " you da best <3 ^w^"
-		return flags
-	default:
+	data, ok := v[0].(datatypes.ChatMessageData)
+	if !ok {
 		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
 		flags.Skip = action.Flag{Active: true, IntData: 1}
 		return flags
 	}
+	if data.SourceBroadcasterUserID != "" && data.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
+		flags.Skip = action.Flag{Active: true, IntData: 1}
+		return flags
+	}
+	flags.PassThrough = "O: thx for the lurk " + data.ChatterUserName + " you da best <3 ^w^"
+	return flags
 
 }
 
