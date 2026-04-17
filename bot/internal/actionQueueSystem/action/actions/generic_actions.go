@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
@@ -15,13 +16,13 @@ type ExampleActoin struct {
 	action.Action
 }
 
-func (a *ExampleActoin) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a ExampleActoin) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
-func (a *ExampleActoin) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a ExampleActoin) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -31,14 +32,14 @@ type ReplyToMessage struct {
 	Message string
 }
 
-func (a *ReplyToMessage) Run(passThough any, v ...any) action.Flags { // v[0] is the message, v[1] is the CommandData or message is defined at creation, then v[0] is the CommandData
-	flags := action.Flags{PassThrough: passThough}
+func (a ReplyToMessage) Run(passThrough any, v ...any) action.Flags { // v[0] is the message, v[1] is the CommandData or message is defined at creation, then v[0] is the CommandData
+	flags := action.Flags{PassThrough: passThrough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
 	}
 	if a.Message == "" {
-		message, ok := passThough.(string)
+		message, ok := passThrough.(string)
 		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
@@ -57,8 +58,8 @@ func (a *ReplyToMessage) Run(passThough any, v ...any) action.Flags { // v[0] is
 	return flags
 }
 
-func (a *ReplyToMessage) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a ReplyToMessage) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -67,10 +68,10 @@ type SendMessage struct {
 	Message string
 }
 
-func (a *SendMessage) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a SendMessage) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if a.Message == "" {
-		message, ok := passThough.(string)
+		message, ok := passThrough.(string)
 		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
@@ -84,8 +85,8 @@ func (a *SendMessage) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *SendMessage) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a SendMessage) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -95,14 +96,14 @@ type SendAnnouncement struct {
 	Color   string
 }
 
-func (a *SendAnnouncement) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a SendAnnouncement) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if a.Message == "" {
-		message, ok := passThough.(string)
+		message, ok := passThrough.(string)
 		if ok {
 			a.Message = message
 		} else {
-			announcement, ok := passThough.([]string)
+			announcement, ok := passThrough.([]string)
 			if !ok || len(announcement) != 2 {
 				flags.Error = fmt.Errorf("no message or color provided")
 				return flags
@@ -126,8 +127,8 @@ func (a *SendAnnouncement) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *SendAnnouncement) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a SendAnnouncement) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -136,10 +137,10 @@ type Delay struct {
 	Duration time.Duration
 }
 
-func (a *Delay) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a Delay) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if a.Duration == 0 {
-		duration, ok := passThough.(int)
+		duration, ok := passThrough.(int)
 		if !ok {
 			flags.Error = fmt.Errorf("no duration provided")
 			return flags
@@ -150,8 +151,8 @@ func (a *Delay) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *Delay) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a Delay) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -187,10 +188,10 @@ type Log struct {
 	Formatter func(data []any) ([]any, error) // optional. if sceeme is LogSceemeCustom, this formatter will be used to format the log message. it takes in the data and returns the formatted data to pass to the logger. if not provided, will pass data as is.
 }
 
-func (a *Log) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a Log) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if a.Message == "" {
-		message, ok := passThough.(string)
+		message, ok := passThrough.(string)
 		if !ok {
 			flags.Error = fmt.Errorf("no message provided")
 			return flags
@@ -247,7 +248,113 @@ func (a *Log) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *Log) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a Log) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	return flags
+}
+
+const defaultADLeanth = 60
+
+type RunAD struct {
+	action.Action
+	Time int
+}
+
+func (a RunAD) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+
+	if a.Time >= 0 {
+		if time, ok := passThrough.(int); ok {
+			a.Time = time
+		} else {
+			time = defaultADLeanth
+		}
+	}
+
+	if a.Time > 180 {
+		a.Time = 180
+	} else if a.Time < 30 {
+		a.Time = 30
+	}
+
+	if _, err := twitchapi.AsUser().Post("/channels/commercial", fmt.Sprintf(`
+		{
+			"broadcaster_id": %s,
+  			"length": %d
+		}
+		`,
+		context.Get().GetBroadcaster().Id,
+		a.Time,
+	)); err != nil {
+		flags.Error = err
+	}
+
+	return flags
+}
+
+func (a RunAD) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	return flags
+}
+
+type SetYappyChat struct {
+	action.Action
+	Mode   bool
+	Toggle bool
+}
+
+func (a SetYappyChat) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	if a.Toggle {
+		context.Get().YappyChat = !context.Get().YappyChat
+	} else {
+		context.Get().YappyChat = a.Mode
+	}
+	flags.PassThrough = context.Get().YappyChat
+	return flags
+}
+
+func (a SetYappyChat) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	return flags
+}
+
+type IfBool struct {
+	action.Action
+	TrueActoins  []action.Action
+	FalseActoins []action.Action
+	ActoinData   []any
+}
+
+func (a IfBool) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	b, ok := passThrough.(bool)
+	if !ok {
+		flags.Error = fmt.Errorf("Expexctd bool")
+		return flags
+	}
+
+	if b {
+		flags.AddActions = action.Flag{
+			Active:     true,
+			Actions:    a.TrueActoins,
+			ActionData: a.ActoinData,
+		}
+	} else {
+		flags.AddActions = action.Flag{
+			Active:     true,
+			Actions:    a.FalseActoins,
+			ActionData: a.ActoinData,
+		}
+	}
+
+	if len(a.ActoinData) == 0 {
+		flags.AddActions.ActionData = v
+	}
+	return flags
+}
+
+func (a IfBool) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

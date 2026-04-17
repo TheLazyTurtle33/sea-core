@@ -12,8 +12,8 @@ type CreateLurkText struct {
 	action.Action
 }
 
-func (a *CreateLurkText) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a CreateLurkText) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
@@ -33,7 +33,7 @@ func (a *CreateLurkText) Run(passThough any, v ...any) action.Flags {
 
 }
 
-func (a *CreateLurkText) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a CreateLurkText) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

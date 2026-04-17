@@ -51,8 +51,19 @@ var TestRedeem = Redeem{
 	IsPaused:        false,
 }
 
+var LogInRedeem = Redeem{
+	Title:           "temp name",
+	Cost:            1000,
+	BackgroundColor: "#00BFFF",
+	IsEnabled:       true,
+	IsPaused:        false,
+	QueueName:       "redeems",
+	Actions:         []action.Action{&actions.LogIn{}, &CompleteRedeemAction{}},
+}
+
 var definedRedeems = map[string]Redeem{
-	TestRedeem.Title: TestRedeem,
+	TestRedeem.Title:  TestRedeem,
+	LogInRedeem.Title: LogInRedeem,
 }
 
 var definedOverrides = map[string]Redeem{
@@ -63,8 +74,8 @@ type CompleteRedeemAction struct {
 	action.Action
 }
 
-func (a *CompleteRedeemAction) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a CompleteRedeemAction) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("no data provided")
 		return flags
@@ -84,7 +95,7 @@ func (a *CompleteRedeemAction) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *CompleteRedeemAction) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a CompleteRedeemAction) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

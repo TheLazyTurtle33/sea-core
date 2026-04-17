@@ -13,8 +13,8 @@ type ShoutOut struct {
 	action.Action
 }
 
-func (a *ShoutOut) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a ShoutOut) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 
 	if len(v) == 0 {
 		flags.Error = fmt.Errorf("Expectided data")
@@ -54,8 +54,8 @@ func (a *ShoutOut) Run(passThough any, v ...any) action.Flags {
 	return flags
 }
 
-func (a *ShoutOut) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a ShoutOut) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }
 
@@ -64,11 +64,11 @@ type SendShoutOut struct {
 	ShoutOutID string
 }
 
-func (a *SendShoutOut) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a SendShoutOut) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 
 	if a.ShoutOutID == "" {
-		id, ok := passThough.(string)
+		id, ok := passThrough.(string)
 		if !ok {
 			flags.Error = fmt.Errorf("faild to get id string from passthrough")
 			return flags
@@ -92,7 +92,7 @@ func (a *SendShoutOut) Run(passThough any, v ...any) action.Flags {
 
 	return flags
 }
-func (a *SendShoutOut) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a SendShoutOut) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

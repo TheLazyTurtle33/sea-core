@@ -6,13 +6,13 @@ type SendTTS struct {
 	action.Action
 }
 
-func (a SendTTS) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a SendTTS) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 
 	return flags
 }
 
-func (a SendTTS) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a SendTTS) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

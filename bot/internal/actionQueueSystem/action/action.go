@@ -4,6 +4,7 @@ type Flag struct {
 	Active     bool     // if a flag is set
 	StringData string   // if a flag needs to pass string data
 	IntData    int      // if a flag needs to pass int data
+	BoolData   bool     // if a flag needs to pass bool data
 	Actions    []Action // the actoins for if a flag needs it
 	ActionData []any    // the data for the added actions
 }
@@ -25,6 +26,6 @@ type Flags struct {
 }
 
 type Action interface {
-	Run(passThough any, v ...any) Flags
-	OnAdd(v ...any) Flags // ran when this action is added to a queue
+	Run(passThrough any, v ...any) Flags
+	OnAdd(passThrough any, v ...any) Flags // ran when this action is added to a queue
 }

@@ -11,6 +11,7 @@ type Context struct {
 	broadcaster *datatypes.User
 	bot         *datatypes.User
 	LastChat    *datatypes.ChatMessageData
+	YappyChat   bool
 }
 
 var instance *Context

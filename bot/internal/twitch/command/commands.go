@@ -6,6 +6,7 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action/actions"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 )
 
 var TestCommand = Command{
@@ -39,7 +40,7 @@ var ShoutOutCommand = Command{
 
 var Lurk = Command{
 	Name:        "Lurk",
-	Triggers:    []string{"!lurk"},
+	Triggers:    []string{"!lurk", "!lurking"},
 	Description: "Thanks the viewer for lurking.",
 	Usage:       "!lurk",
 	Actions:     []action.Action{&actions.CreateLurkText{}, &actions.SendMessage{}},
@@ -70,8 +71,31 @@ var KofiCommand = Command{
 var TTSCommand = Command{
 	Name:     "TTS",
 	Triggers: []string{"!tts"},
-	Actions:  []action.Action{&actions.ReplyToMessage{Message: "still making TTS X.X try again when it ready :3 (or use !kofi for old tts)"}},
-	Active:   true,
+	Actions:  []action.Action{&tts.TTS{Message: ""}},
+	// Actions:  []action.Action{&actions.ReplyToMessage{Message: "still making TTS X.X try again when it ready :3 (or use !kofi for old tts)"}},
+	Active: true,
+}
+
+var BRBCommand = Command{
+	Name:        "Be Right Back",
+	Triggers:    []string{"!brb"},
+	Actions:     []action.Action{&actions.SetScene{Scene: "BRB"}, &actions.RunAD{}},
+	Active:      true,
+	AlowedUsers: []string{"moderator"},
+}
+
+var YappyChatCommad = Command{
+	Name:     "Yappy Chat",
+	Triggers: []string{"!yappychat", "!yc"},
+	Actions: []action.Action{
+		&actions.SetYappyChat{Toggle: true},
+		&actions.IfBool{
+			TrueActoins:  []action.Action{&actions.ReplyToMessage{Message: "Yappy Chat is now on!"}},
+			FalseActoins: []action.Action{&actions.ReplyToMessage{Message: "Yappy Chat is now off :c"}},
+		},
+	},
+	Active:      true,
+	AlowedUsers: []string{"moderator"},
 }
 
 var CommandTriggers = map[string]*Command{}
@@ -83,6 +107,8 @@ var Commands = []*Command{
 	&KofiCommand,
 	&TTSCommand,
 	&ShoutOutCommand,
+	&BRBCommand,
+	&YappyChatCommad,
 }
 
 func RegisterCommands() {

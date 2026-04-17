@@ -16,6 +16,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/bot:/app/data
+      - ~/.ssh/tts_key:/root/.ssh/tts_key:ro
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:

@@ -11,6 +11,7 @@ cd bot && go build -gcflags="all=-N -l" -o /app/bin/bot ./cmd/bot
     
     
 FROM alpine:latest
+RUN apk add --no-cache openssh-client ffmpeg
 WORKDIR /app
 COPY --from=builder /app/bin/bot .
 # COPY --from=builder /go/bin/dlv /usr/local/bin/dlv

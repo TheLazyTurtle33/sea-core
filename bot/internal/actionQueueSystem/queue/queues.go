@@ -25,7 +25,7 @@ var DiscordQueue = Queue{
 	locked:      true,
 	repeating:   true,
 	persistent:  true,
-	repeatDelay: 30 * time.Minute,
+	repeatDelay: 45 * time.Minute,
 	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
 }
 

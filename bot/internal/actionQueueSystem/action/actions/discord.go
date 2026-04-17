@@ -13,8 +13,8 @@ type CreateDiscordInvite struct {
 
 const InviteLink = "https://discord.gg/GJpybRAEq5"
 
-func (a *CreateDiscordInvite) Run(passThough any, v ...any) action.Flags {
-	flags := action.Flags{PassThrough: passThough}
+func (a CreateDiscordInvite) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	switch v[0].(type) {
 	case datatypes.ChatMessageData:
 		data := v[0].(datatypes.ChatMessageData)
@@ -45,13 +45,7 @@ func command(flags action.Flags, chat datatypes.ChatMessageData) action.Flags {
 func schedualedMessage(flags action.Flags) action.Flags {
 	logger.Debug("scheduald Discord mesage", "last chatter id", context.Get().LastChat.ChatterUserID, "bot id", context.Get().GetBot().Id)
 	if context.Get().LastChat.ChatterUserID != context.Get().GetBot().Id {
-		flags.AddActions = action.Flag{
-			Active: true,
-			Actions: []action.Action{
-				&SendMessage{Message: "Come check out the discord if ya wanna hang after stream ^w^ (" + InviteLink + ")"},
-			},
-			ActionData: []any{nil},
-		}
+		flags.PassThrough = "Come check out the discord if ya wanna hang after stream ^w^ (" + InviteLink + ")"
 	} else {
 		logger.Log("Last Message was from bot, sleeping")
 		flags.AddActions = action.Flag{
@@ -61,11 +55,12 @@ func schedualedMessage(flags action.Flags) action.Flags {
 			},
 			ActionData: []any{nil},
 		}
+		flags.Skip.Active = true
 	}
 	return flags
 }
 
-func (a *CreateDiscordInvite) OnAdd(v ...any) action.Flags {
-	flags := action.Flags{}
+func (a CreateDiscordInvite) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

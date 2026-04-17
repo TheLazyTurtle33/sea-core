@@ -10,7 +10,6 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
 )
@@ -27,32 +26,12 @@ func main() {
 
 	redeems.RegisterRedeems()
 
-	tts.Test()
+	// tts.Test()
 
 	// stt.Test()
 
-	// if err := obs.Init(); err != nil {
-	// 	logger.Error(err, "failed to connect to OBS")
-	// }
-
-	// logger.Log("connected to OBS")
-	// client, err := obs.Get()
-	// if err != nil {
-	// 	logger.Error(err, "failed to get OBS client")
-	// }
-	// result, err := client.Send("GetVersion", nil)
-	// if err != nil {
-	// 	logger.Error(err, "failed to get OBS version")
-	// }
-	// logger.Log("OBS version", result["obsWebSocketVersion"])
-	// result, err = client.Send("SetCurrentProgramScene", map[string]any{
-	// 	"sceneName": "BRB",
-	// })
-	// if err != nil {
-	// 	logger.Error(err, "failed to set scene")
-	// }
-	// logger.Log("Set scene", result)
 	api.Start()
+
 }
 
 func trapSignals() {
