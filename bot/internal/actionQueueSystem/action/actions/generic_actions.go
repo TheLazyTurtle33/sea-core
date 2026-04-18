@@ -3,6 +3,8 @@ package actions
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
@@ -263,26 +265,18 @@ type RunAD struct {
 func (a RunAD) Run(passThrough any, v ...any) action.Flags {
 	flags := action.Flags{PassThrough: passThrough}
 
-	if a.Time >= 0 {
-		if time, ok := passThrough.(int); ok {
-			a.Time = time
-		} else {
-			time = defaultADLeanth
-		}
+	if a.Time <= 0 {
+		a.Time = resolveTime(passThrough, v)
 	}
 
-	if a.Time >= 180 {
-		a.Time = 180
-	} else if a.Time < 180 && a.Time >= 150 {
-		a.Time = 150
-	} else if a.Time < 150 && a.Time >= 120 {
-		a.Time = 12
-	} else if a.Time < 120 && a.Time >= 90 {
-		a.Time = 90
-	} else if a.Time < 90 && a.Time >= 60 {
-		a.Time = 60
-	} else if a.Time < 60 {
-		a.Time = 30
+	steps := []int{180, 150, 120, 90, 60, 30}
+
+	a.Time = steps[len(steps)-1] // default to smallest
+	for _, step := range steps {
+		if a.Time >= step {
+			a.Time = step
+			break
+		}
 	}
 
 	if _, err := twitchapi.AsUser().Post("/channels/commercial", fmt.Sprintf(`
@@ -298,6 +292,22 @@ func (a RunAD) Run(passThrough any, v ...any) action.Flags {
 	}
 
 	return flags
+}
+
+func resolveTime(passThrough any, v []any) int {
+	if time, ok := passThrough.(int); ok {
+		return time
+	}
+
+	if chat, ok := v[0].(datatypes.ChatMessageData); ok {
+		if words := strings.Split(chat.Message.Text, " "); len(words) > 1 {
+			if t, err := strconv.Atoi(words[1]); err == nil {
+				return t
+			}
+		}
+	}
+
+	return defaultADLeanth
 }
 
 func (a RunAD) OnAdd(passThrough any, v ...any) action.Flags {

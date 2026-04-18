@@ -36,43 +36,38 @@ func HandleRaid(data raidData) {
 
 		raidText := fmt.Sprintf("%s Washed in \n with %d castaways", data.FromBroadcasterUserName, data.Viewers)
 
-		_, err = client.SetSourceVisability("RaidText", false)
-		if err != nil {
+		if _, err = client.SetSourceVisability("RaidText", false); err != nil {
 			logger.Error("Error hiding RaidText", err)
 			return
 		}
-		_, err = client.SetSourceVisability("Raid", true)
-		if err != nil {
+
+		if _, err = client.SetSourceVisability("Raid", true); err != nil {
 			logger.Error("Error showing Raid group", err)
 			return
 		}
 
-		_, err = client.SetTextSourceText("RaidText", raidText)
-		if err != nil {
+		if _, err = client.SetTextSourceText("RaidText", raidText); err != nil {
 			logger.Error("Error uppdating RaidText", err)
 			return
 		}
 
 		time.Sleep(TextShowWait)
 
-		_, err = client.SetSourceVisability("RaidText", true)
-		if err != nil {
+		if _, err = client.SetSourceVisability("RaidText", true); err != nil {
 			logger.Error("Error showing RaidText", err)
 			return
 		}
 
 		time.Sleep(GroupHideWait)
 
-		_, err = client.SetSourceVisability("Raid", false)
-		if err != nil {
+		if _, err = client.SetSourceVisability("Raid", false); err != nil {
 			logger.Error("Error showing Raid group", err)
 			return
 		}
 
 		time.Sleep(TextHideWait)
 
-		_, err = client.SetSourceVisability("RaidText", false)
-		if err != nil {
+		if _, err = client.SetSourceVisability("RaidText", false); err != nil {
 			logger.Error("Error hiding RaidText", err)
 			return
 		}
