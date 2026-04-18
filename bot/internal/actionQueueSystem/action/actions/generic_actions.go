@@ -271,9 +271,17 @@ func (a RunAD) Run(passThrough any, v ...any) action.Flags {
 		}
 	}
 
-	if a.Time > 180 {
+	if a.Time >= 180 {
 		a.Time = 180
-	} else if a.Time < 30 {
+	} else if a.Time < 180 && a.Time >= 150 {
+		a.Time = 150
+	} else if a.Time < 150 && a.Time >= 120 {
+		a.Time = 12
+	} else if a.Time < 120 && a.Time >= 90 {
+		a.Time = 90
+	} else if a.Time < 90 && a.Time >= 60 {
+		a.Time = 60
+	} else if a.Time < 60 {
 		a.Time = 30
 	}
 

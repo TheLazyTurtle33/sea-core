@@ -91,6 +91,17 @@ func HandleNotification(notification *EventNotification) {
 			return
 		}
 		redeems.HandleRedemption(data)
+	case "stream.online":
+		context.Get().IsLive = true
+	case "stream.offline":
+		context.Get().IsLive = false
+	case "channel.raid":
+		var data raidData
+		if err := json.Unmarshal(notification.Event, &data); err != nil {
+			logger.Error("failed to unmarshal event", err)
+			return
+		}
+		HandleRaid(data)
 	default:
 		logger.Warn("unknown event type", "event", notification.Subscription.Type)
 	}

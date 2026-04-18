@@ -13,6 +13,9 @@ import (
 var eventsToSubscribeTo = []string{
 	"channel.chat.message",
 	"channel.channel_points_custom_reward_redemption.add",
+	"stream.online",
+	"stream.offline",
+	"channel.raid",
 }
 
 var eventsToUnSubscribeFrom = []string{}
@@ -78,6 +81,24 @@ func SubscribeAll() {
 			subChat()
 		case "channel.channel_points_custom_reward_redemption.add":
 			subRedemptions()
+		case "strem.online":
+			if err := Subscribe("strem.online", "1", Condition{
+				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
+			}); err != nil {
+				logger.Error("failed to subscribe to chat messages", err)
+			}
+		case "strem.offline":
+			if err := Subscribe("strem.offline", "1", Condition{
+				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
+			}); err != nil {
+				logger.Error("failed to subscribe to chat messages", err)
+			}
+		case "channel.raid":
+			if err := Subscribe("channel.raid", "1", Condition{
+				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
+			}); err != nil {
+				logger.Error("failed to subscribe to chat messages", err)
+			}
 		default:
 			logger.Warn("unknown subscription type", "type", event)
 		}
