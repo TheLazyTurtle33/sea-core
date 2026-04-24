@@ -29,10 +29,18 @@ var DiscordQueue = Queue{
 	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
 }
 
+var TTSQueue = Queue{
+	name:       "tts",
+	locked:     false,
+	repeating:  false,
+	persistent: true,
+}
+
 var Queues = []*Queue{
 	&DefaultQueue,
 	&DiscordQueue,
 	&RedeemsQueue,
+	&TTSQueue,
 }
 
 func GetQueue(name string) *Queue {

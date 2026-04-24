@@ -61,11 +61,11 @@ var CommandsCommand = Command{
 }
 
 var TTSCommand = Command{
-	Name:     "TTS",
-	Triggers: []string{"!tts"},
-	Actions:  []action.Action{&tts.TTS{Message: ""}},
-	// Actions:  []action.Action{&actions.ReplyToMessage{Message: "still making TTS X.X try again when it ready :3 (or use !kofi for old tts)"}},
-	Active: true,
+	Name:      "TTS",
+	Triggers:  []string{"!tts"},
+	Actions:   []action.Action{&tts.TTS{}},
+	QueueName: "tts",
+	Active:    true,
 }
 
 var BRBCommand = Command{

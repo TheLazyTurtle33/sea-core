@@ -116,7 +116,7 @@ func MakeTTS(msg, chatter string) {
 	wav := mergeWav(wavs...)
 
 	var err error
-	if !context.Get().YappyChat {
+	if !context.Get().TTSContext.YappyChat {
 		err = os.WriteFile(fmt.Sprintf("/app/data/tts/%s_%s.wav", time.Now().Add(2*time.Hour).Format("2006-01-02_15:04:05"), chatter), wav, 0644)
 	}
 	err = os.WriteFile("/app/data/tts/tts.wav", wav, 0644)
@@ -270,6 +270,20 @@ func intToBytes(n uint32) []byte {
 	}
 }
 
+func wavDuration(wav []byte) time.Duration {
+	if len(wav) < 44 {
+		return 0
+	}
+	dataSize := binary.LittleEndian.Uint32(wav[40:44])
+	sampleRate := binary.LittleEndian.Uint32(wav[24:28])
+	channels := binary.LittleEndian.Uint16(wav[22:24])
+	bitDepth := binary.LittleEndian.Uint16(wav[34:36])
+
+	bytesPerSecond := sampleRate * uint32(channels) * uint32(bitDepth/8)
+	durationMs := (uint64(dataSize) * 1000) / uint64(bytesPerSecond)
+	return time.Duration(durationMs) * time.Millisecond
+}
+
 type TTS struct {
 	action.Action
 	Message string
@@ -336,10 +350,31 @@ func (a TTS) Run(passThrough any, v ...any) action.Flags {
 		return flags
 	}
 
+	file, err := os.OpenFile("/app/data/tts/tts.wav", os.O_RDONLY, 0644)
+	if err != nil {
+		flags.Error = fmt.Errorf("tts: faild to open tts.wav")
+		return flags
+	}
+	context.Get().TTSContext.Count -= 1
+
+	var wav []byte
+	file.Read(wav)
+
+	duration := wavDuration(wav)
+	time.Sleep(duration)
+
+	if context.Get().TTSContext.Delay > 0 {
+		flags.AddActions = action.Flag{
+			Active:  true,
+			Actions: []action.Action{actions.Delay{Duration: context.Get().TTSContext.Delay}},
+		}
+	}
+
 	return flags
 }
 
 func (a TTS) OnAdd(passThrough any, v ...any) action.Flags {
 	flags := action.Flags{PassThrough: passThrough}
+	context.Get().TTSContext.Count += 1
 	return flags
 }

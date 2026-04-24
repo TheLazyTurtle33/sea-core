@@ -1,19 +1,30 @@
 package context
 
 import (
+	"time"
+
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/auth"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
+
+type TTSContext struct {
+	IsActive  bool
+	Delay     time.Duration
+	Count     int
+	YappyChat bool
+}
+
+const TTSDelayDefualt = 5 * time.Minute
 
 type Context struct {
 	Auth        *auth.Auth
 	broadcaster *datatypes.User
 	bot         *datatypes.User
 	LastChat    *datatypes.ChatMessageData
-	YappyChat   bool
 	IsLive      bool
 	CanShock    bool
+	TTSContext  TTSContext
 }
 
 var instance *Context
@@ -36,6 +47,10 @@ func new() *Context {
 	c.bot = datatypes.NewUser(c.Auth.GetBotOauthToken(), c.Auth.GetClientId())
 	if c.bot == nil {
 		logger.Warn("Bot could not be retrieved")
+	}
+	c.TTSContext = TTSContext{
+		IsActive: true,
+		Delay:    TTSDelayDefualt,
 	}
 	return c
 }

@@ -1,10 +1,10 @@
 package chat
 
 import (
-	"os/exec"
 	"slices"
 	"strings"
 
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/queue"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
@@ -19,13 +19,9 @@ func HandleMessage(data datatypes.ChatMessageData) {
 	parseForHello(data)
 	parseForCommand(data)
 
-	if context.Get().YappyChat {
-		tts.MakeTTS(data.Message.Text, data.ChatterUserLogin)
-
-		cmd := exec.Command("scp", "-i", "/root/.ssh/tts_key", "-o", "StrictHostKeyChecking=no", "/app/data/tts/tts.wav", "turt@192.168.0.182:/home/turt/StreamShit/audio/tts/tts.wav")
-		if err := cmd.Run(); err != nil {
-			logger.Error("erros sending file", err)
-		}
+	if context.Get().TTSContext.YappyChat {
+		q := queue.GetQueue("tts")
+		q.AddAction(tts.TTS{Message: data.Message.Text, Name: data.ChatterUserLogin}, []any{})
 	}
 
 }
