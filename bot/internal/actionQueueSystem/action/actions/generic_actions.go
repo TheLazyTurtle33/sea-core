@@ -148,7 +148,7 @@ func (a Delay) Run(passThrough any, v ...any) action.Flags {
 			flags.Error = fmt.Errorf("no duration provided")
 			return flags
 		}
-		a.Duration = time.Duration(duration * int(time.Second))
+		a.Duration = time.Duration(duration)
 	}
 	time.Sleep(a.Duration)
 	return flags
@@ -324,11 +324,18 @@ type SetYappyChat struct {
 func (a SetYappyChat) Run(passThrough any, v ...any) action.Flags {
 	flags := action.Flags{PassThrough: passThrough}
 	if a.Toggle {
-		context.Get().YappyChat = !context.Get().YappyChat
+		context.Get().TTSContext.YappyChat = !context.Get().TTSContext.YappyChat
 	} else {
-		context.Get().YappyChat = a.Mode
+		context.Get().TTSContext.YappyChat = a.Mode
 	}
-	flags.PassThrough = context.Get().YappyChat
+
+	if context.Get().TTSContext.YappyChat {
+		context.Get().TTSContext.Delay = 0
+	} else {
+		context.Get().TTSContext.Delay = context.TTSDelayDefualt
+	}
+
+	flags.PassThrough = context.Get().TTSContext.YappyChat
 	return flags
 }
 

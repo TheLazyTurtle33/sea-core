@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"time"
+
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
@@ -15,6 +17,9 @@ const InviteLink = "https://discord.gg/GJpybRAEq5"
 
 func (a CreateDiscordInvite) Run(passThrough any, v ...any) action.Flags {
 	flags := action.Flags{PassThrough: passThrough}
+	if len(v) == 0 {
+		return schedualedMessage(flags)
+	}
 	switch v[0].(type) {
 	case datatypes.ChatMessageData:
 		data := v[0].(datatypes.ChatMessageData)
@@ -51,7 +56,7 @@ func schedualedMessage(flags action.Flags) action.Flags {
 		flags.AddActions = action.Flag{
 			Active: true,
 			Actions: []action.Action{
-				&Delay{Duration: 60 * 5},
+				&Delay{Duration: 5 * time.Minute},
 			},
 		}
 		flags.Skip.Active = true

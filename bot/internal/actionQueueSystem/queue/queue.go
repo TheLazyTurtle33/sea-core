@@ -22,7 +22,7 @@ type Queue struct {
 	puased         time.Duration
 }
 
-func (q *Queue) AddActions(a action.Action, data []any) {
+func (q *Queue) AddAction(a action.Action, data []any) {
 	if q.locked {
 		logger.Log("Queue Locked!", "queue", q.name)
 		return
@@ -32,7 +32,7 @@ func (q *Queue) AddActions(a action.Action, data []any) {
 	q.OnAddAction(a, data)
 }
 
-func (q *Queue) AddActionsAtIndex(a action.Action, index int, data ...any) {
+func (q *Queue) AddActionAtIndex(a action.Action, index int, data ...any) {
 	if q.locked {
 		logger.Log("Queue Locked!", "queue", q.name)
 		return
@@ -168,7 +168,7 @@ func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, d
 		}
 
 		for i, a := range flags.AddActions.Actions {
-			queue.AddActionsAtIndex(a, index+i, ActionData[i]...)
+			queue.AddActionAtIndex(a, index+i, ActionData[i]...)
 		}
 
 	}

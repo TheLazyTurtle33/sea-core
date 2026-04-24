@@ -31,7 +31,7 @@ func (c *Command) AddActions(data any) {
 	q := queue.GetQueue(c.QueueName)
 	if len(c.AlowedUsers) == 0 || slices.Contains(c.AlowedUsers, "everyone") {
 		for _, a := range c.Actions {
-			q.AddActions(a, []any{data})
+			q.AddAction(a, []any{data})
 		}
 	} else {
 		chatData, ok := data.(datatypes.ChatMessageData)
@@ -46,7 +46,7 @@ func (c *Command) AddActions(data any) {
 
 		if isAlowedUser(c.AlowedUsers, badges) {
 			for _, a := range c.Actions {
-				q.AddActions(a, []any{data})
+				q.AddAction(a, []any{data})
 			}
 		}
 
