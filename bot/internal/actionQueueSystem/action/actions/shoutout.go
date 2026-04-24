@@ -35,7 +35,7 @@ func (a ShoutOut) Run(passThrough any, v ...any) action.Flags {
 			Actions: []action.Action{
 				&ReplyToMessage{Message: message},
 			},
-			ActionData: []any{chat},
+			ActionData: [][]any{{chat}},
 		}
 		return flags
 	}

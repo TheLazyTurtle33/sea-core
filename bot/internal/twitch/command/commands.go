@@ -2,6 +2,8 @@ package command
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action/actions"
@@ -58,16 +60,6 @@ var CommandsCommand = Command{
 	Active:      true,
 }
 
-var KofiCommand = Command{
-	Name:        "Ko-fi",
-	Triggers:    []string{"!kofi", "!ko-fi"},
-	Description: "Get the Ko-fi link. Used for TTS as well.",
-	Usage:       "!kofi",
-	Actions:     []action.Action{&actions.ReplyToMessage{Message: "If you'd like to support me (or send a TTS) chu can do that here ^w^ : https://ko-fi.com/thelazyturtle33"}},
-	AlowedUsers: []string{"everyone"},
-	Active:      true,
-}
-
 var TTSCommand = Command{
 	Name:     "TTS",
 	Triggers: []string{"!tts"},
@@ -98,17 +90,66 @@ var YappyChatCommad = Command{
 	AlowedUsers: []string{"moderator"},
 }
 
+var ShockCommand = Command{
+	Name:     "Shock",
+	Triggers: []string{"!shock"},
+	Actions:  []action.Action{&actions.Shock{}},
+	Active:   true,
+}
+
+var SupportMeCommand = Command{
+	Name:        "Support Me",
+	Triggers:    []string{"!tip", "!support", "!kofi", "!kofi", "!donate"},
+	Description: "Get the links you can support me at <3",
+	Usage:       "!kofi",
+	Actions:     []action.Action{&actions.ReplyToMessage{Message: "so many places to suport me :o pick your poison ig: https://ko-fi.com/thelazyturtle33, https://wish.ly/thelazyturtle33, https://fansly.com/LazyTurtle33"}},
+	AlowedUsers: []string{"everyone"},
+	Active:      true,
+}
+
+var TimeCommand = Command{
+	Name:        "Time",
+	Triggers:    []string{"!time"},
+	Description: "Get my current local time",
+	Usage:       "!time",
+	Actions: []action.Action{
+		&actions.Functoin{
+			Fn: func(passThrough any, v ...any) action.Flags {
+				flags := action.Flags{}
+				flags.PassThrough = fmt.Sprintf("It is currently %s for me :3", time.Now().Add(2*time.Hour).Format("15:04:05"))
+				return flags
+			},
+		},
+		&actions.ReplyToMessage{},
+	},
+	AlowedUsers: []string{"everyone"},
+	Active:      true,
+}
+
+var SocalsCommand = Command{
+	Name:        "Socals",
+	Triggers:    []string{"!socals", "!socal", "!tiktok", "!youtube", "!yt"},
+	Description: "Get the links to all my socals",
+	Usage:       "!socals",
+	Actions:     []action.Action{&actions.ReplyToMessage{Message: "Everywhere you can find me: https://www.youtube.com/@The_LazyTurtle33, https://www.tiktok.com/@thelazyturtle33, https://bsky.app/profile/lazyturtle33.bsky.social,  https://fansly.com/LazyTurtle33"}},
+	AlowedUsers: []string{"everyone"},
+	Active:      true,
+}
+
 var CommandTriggers = map[string]*Command{}
 var Commands = []*Command{
 	&TestCommand,
 	&DiscordLink,
 	&Lurk,
 	&CommandsCommand,
-	&KofiCommand,
+	&SupportMeCommand,
 	&TTSCommand,
 	&ShoutOutCommand,
 	&BRBCommand,
 	&YappyChatCommad,
+	&ShockCommand,
+	&TimeCommand,
+	&SocalsCommand,
 }
 
 func RegisterCommands() {

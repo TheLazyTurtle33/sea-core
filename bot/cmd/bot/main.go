@@ -21,6 +21,7 @@ func main() {
 
 	context.Get().Auth.StartRefreshTokensWorker()
 
+	// eventsub.UnsubAll()
 	eventsub.SubscribeAll()
 	queue.StartUp()
 

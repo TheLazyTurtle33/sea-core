@@ -50,10 +50,10 @@ func (t *TwitchAPI) Get(endpoint string) ([]byte, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("%s", string(body))
+		return nil, fmt.Errorf("%s", string(body))
 	}
 
-	return body, err
+	return body, nil
 }
 
 func (t *TwitchAPI) Post(endpoint, json string) ([]byte, error) {
@@ -69,10 +69,10 @@ func (t *TwitchAPI) Post(endpoint, json string) ([]byte, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("%s", string(body))
+		return nil, fmt.Errorf("%s", string(body))
 	}
 
-	return body, err
+	return body, nil
 }
 
 func (t *TwitchAPI) Patch(endpoint, json string) ([]byte, error) {
@@ -87,10 +87,10 @@ func (t *TwitchAPI) Patch(endpoint, json string) ([]byte, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("%s", string(body))
+		return nil, fmt.Errorf("%s", string(body))
 	}
 
-	return body, err
+	return body, nil
 }
 
 func (t *TwitchAPI) Delete(endpoint string) ([]byte, error) {
@@ -106,10 +106,10 @@ func (t *TwitchAPI) Delete(endpoint string) ([]byte, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("%s", string(body))
+		return nil, fmt.Errorf("%s", string(body))
 	}
 
-	return body, err
+	return body, nil
 }
 
 func (t *TwitchAPI) SendMessage(message string) ([]byte, error) {

@@ -6,7 +6,7 @@ type Flag struct {
 	IntData    int      // if a flag needs to pass int data
 	BoolData   bool     // if a flag needs to pass bool data
 	Actions    []Action // the actoins for if a flag needs it
-	ActionData []any    // the data for the added actions
+	ActionData [][]any  // the data for the added actions
 }
 
 type Flags struct {

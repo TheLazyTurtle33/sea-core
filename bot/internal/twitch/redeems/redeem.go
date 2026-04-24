@@ -45,7 +45,7 @@ func (r *Redeem) AddActions(data any) {
 	}
 	q := queue.GetQueue(r.QueueName)
 	for _, a := range r.Actions {
-		q.AddActions(a, data)
+		q.AddActions(a, []any{data})
 	}
 
 	q.Start()

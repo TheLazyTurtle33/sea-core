@@ -88,7 +88,7 @@ func RequestRedeems() {
 		if fromDefinedRedeems, ok := definedRedeems[redeem.Title]; ok {
 			fromDefinedRedeems.ID = redeem.ID
 			iDRedeemsMap[redeem.ID] = fromDefinedRedeems
-			UpdateRedeem(redeem.ID, fromDefinedRedeems)
+			// UpdateRedeem(redeem.ID, fromDefinedRedeems)
 			delete(definedRedeems, redeem.Title)
 		} else if fromDefinedOverrides, ok := definedOverrides[redeem.ID]; ok {
 			iDRedeemsMap[redeem.ID] = MakeRedeem(redeem, fromDefinedOverrides)

@@ -35,7 +35,6 @@ func Init() {
 	Loggers = append(Loggers, StanderOutLogger)
 
 	CreateFileLogger()
-	Loggers = append(Loggers, FileLogger)
 
 	// WebLogger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
@@ -110,6 +109,7 @@ func CreateFileLogger() {
 
 	if FileLogger == nil {
 		FileLogger = slog.New(slog.NewTextHandler(f, nil))
+		Loggers = append(Loggers, FileLogger)
 		Log("Created new log file")
 	} else {
 		for i, l := range Loggers {

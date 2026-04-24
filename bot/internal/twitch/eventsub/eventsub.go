@@ -3,6 +3,7 @@ package eventsub
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
@@ -76,6 +77,7 @@ func Subscribe(eventType, version string, condition Condition) error {
 }
 
 func HandleNotification(notification *EventNotification) {
+	logToTempLogger(fmt.Sprintf("new %s event:\n %s\n\n", notification.Subscription.Type, notification.Event))
 	switch notification.Subscription.Type {
 	case "channel.chat.message":
 		var data datatypes.ChatMessageData
@@ -105,4 +107,13 @@ func HandleNotification(notification *EventNotification) {
 	default:
 		logger.Warn("unknown event type", "event", notification.Subscription.Type)
 	}
+}
+
+func logToTempLogger(msg string) {
+	file, err := os.OpenFile("/app/data/logs/log-temp.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		logger.Error("eventsub: faild to make temp log file", err)
+	}
+	defer file.Close()
+	file.Write([]byte(msg))
 }

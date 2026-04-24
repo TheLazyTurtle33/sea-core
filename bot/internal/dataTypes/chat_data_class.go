@@ -25,6 +25,10 @@ type ChatMessageData struct {
 				UserLogin string `json:"user_login"`
 				UserName  string `json:"user_name"`
 			} `json:"mention"`
+			Cheer struct {
+				Bits int `json:"bits"`
+				Tier int `json:"tier"`
+			} `json:"cheer"`
 		} `json:"fragments"`
 	} `json:"message"`
 	Color  string `json:"color"`

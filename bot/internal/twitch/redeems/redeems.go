@@ -61,9 +61,20 @@ var LogInRedeem = Redeem{
 	Actions:         []action.Action{&actions.LogIn{}, &CompleteRedeemAction{}},
 }
 
+var JumpScare = Redeem{
+	Title:           "Jump Scare",
+	Cost:            1000,
+	BackgroundColor: "#FF0000",
+	IsEnabled:       true,
+	IsPaused:        false,
+	QueueName:       "redeems",
+	Actions:         []action.Action{&actions.JumpScareAction{}, &CompleteRedeemAction{}},
+}
+
 var definedRedeems = map[string]Redeem{
 	TestRedeem.Title:  TestRedeem,
 	LogInRedeem.Title: LogInRedeem,
+	JumpScare.Title:   JumpScare,
 }
 
 var definedOverrides = map[string]Redeem{

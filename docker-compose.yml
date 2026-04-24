@@ -26,6 +26,8 @@ services:
       - "seccomp:unconfined"
     cap_add:
       - SYS_PTRACE
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
 
   cloudflared:
     image: cloudflare/cloudflared:latest

@@ -42,7 +42,7 @@ func (a LogIn) OnAdd(passThrough any, v ...any) action.Flags {
 			Actions: []action.Action{
 				&GetLogIns{},
 			},
-			ActionData: []any{},
+			ActionData: [][]any{},
 		},
 	}
 	return flags

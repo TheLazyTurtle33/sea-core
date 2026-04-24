@@ -19,93 +19,6 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 )
 
-func Test() {
-	/*
-		wav1, wav2 := []byte{}, []byte{}
-		{
-
-			body := strings.NewReader(`{"text": "voice 1"}`)
-
-			resp, err := http.Post("http://piper:5000/", "application/json", body)
-			if err != nil {
-				logger.Error("failed to reach piper", err)
-				return
-			}
-			defer resp.Body.Close()
-
-			logger.Log("piper response", "status", resp.StatusCode, "content-type", resp.Header.Get("Content-Type"))
-
-			wav1, err = io.ReadAll(resp.Body)
-			if err != nil {
-				logger.Error("failed to read piper response", err)
-				return
-			}
-
-			logger.Log("TTS read done", "bytes", len(wav1), "first_bytes", fmt.Sprintf("%x", wav1[:min(16, len(wav1))]))
-
-			err = os.WriteFile("/app/data/tts_test.wav", wav1, 0644)
-			if err != nil {
-				logger.Error("failed to write wav file", err)
-				return
-			}
-		}
-		{
-			body := strings.NewReader(`
-			{
-				"text": "voice 2",
-				"voice": "en_GB-alan-medium"
-			}
-			`)
-
-			resp, err := http.Post("http://piper:5000/", "application/json", body)
-			if err != nil {
-				logger.Error("failed to reach piper", err)
-				return
-			}
-			defer resp.Body.Close()
-
-			logger.Log("piper response", "status", resp.StatusCode, "content-type", resp.Header.Get("Content-Type"))
-
-			wav2, err = io.ReadAll(resp.Body)
-			if err != nil {
-				logger.Error("failed to read piper response", err)
-				return
-			}
-
-			logger.Log("TTS read done", "bytes", len(wav2), "first_bytes", fmt.Sprintf("%x", wav2[:min(16, len(wav2))]))
-
-			err = os.WriteFile("/app/data/tts_test2.wav", wav2, 0644)
-			if err != nil {
-				logger.Error("failed to write wav file", err)
-				return
-			}
-		}
-		wav := murgeWav(wav1, wav2)
-		err := os.WriteFile("/app/data/tts_combined.wav", wav, 0644)
-		if err != nil {
-			logger.Error("failed to write combined wav file", err)
-			return
-		}
-		pcm := wav[44:]
-		conn, err := net.Dial("tcp", "192.168.0.182:9999")
-		if err != nil {
-			logger.Error("faild to connect to lan Mic", err)
-			return
-		}
-		defer conn.Close()
-
-		_, err = io.Copy(conn, bytes.NewReader(pcm))
-		if err != nil {
-			logger.Error("faild to send audio", err)
-			return
-		}
-
-		time.Sleep(500 * time.Millisecond)
-		logger.Log("TTS sent", "bytes", len(pcm))
-	*/
-	MakeTTS("hay daddy", "test")
-}
-
 type tts_request struct {
 	Text   string `json:"text"`
 	Voice  string `json:"voice"`
@@ -388,7 +301,7 @@ func (a TTS) Run(passThrough any, v ...any) action.Flags {
 					Actions: []action.Action{
 						&actions.ReplyToMessage{Message: message},
 					},
-					ActionData: []any{chat},
+					ActionData: [][]any{{chat}},
 				}
 				return flags
 			}
@@ -405,7 +318,7 @@ func (a TTS) Run(passThrough any, v ...any) action.Flags {
 					Actions: []action.Action{
 						&actions.ReplyToMessage{Message: message.String()},
 					},
-					ActionData: []any{chat},
+					ActionData: [][]any{{chat}},
 				}
 				return flags
 			}

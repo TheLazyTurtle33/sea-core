@@ -27,7 +27,7 @@ const (
 )
 
 func HandleRaid(data raidData) {
-	if context.Get().GetBroadcaster().Id == data.FromBroadcasterUserID {
+	if data.FromBroadcasterUserID == context.Get().GetBroadcaster().Id {
 		if _, err := twitchapi.AsBot().SendMessage(
 			fmt.Sprintf("BYYEEE EVERYONE :3 have fun in %s's channel ^w^, remember to behave >:c, raid messages coming in!",
 				data.ToBroadcasterUserName,
@@ -42,7 +42,9 @@ func HandleRaid(data raidData) {
 		// if _, err := twitchapi.AsBot().SendMessage(); err != nil {
 		// 	logger.Error("Raid: Error sending message", err)
 		// }
-	} else {
+		return
+	}
+	if data.ToBroadcasterUserID == context.Get().GetBroadcaster().Id {
 		client, err := obs.Get()
 		if err != nil {
 			logger.Error("Raid: Error getting OBS client", err)
@@ -87,5 +89,8 @@ func HandleRaid(data raidData) {
 			return
 		}
 
+		return
 	}
+
+	logger.Error("raid: unknown raid event format", nil)
 }

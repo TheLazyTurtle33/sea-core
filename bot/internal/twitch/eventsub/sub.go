@@ -18,8 +18,6 @@ var eventsToSubscribeTo = []string{
 	"channel.raid",
 }
 
-var eventsToUnSubscribeFrom = []string{}
-
 type SubEvents struct {
 	Data []struct {
 		ID        string `json:"id"`
@@ -46,13 +44,12 @@ type SubEvents struct {
 func SubscribeAll() {
 	body, err := twitchapi.AsApp().Get("/eventsub/subscriptions")
 	if err != nil {
-		logger.Error("failed to get subscriptions", err)
+		logger.Error("sub: failed to get subscriptions", err)
 		return
 	}
-	logger.Log("sub events", "body", string(body))
 	var subEvents SubEvents
 	if err := json.Unmarshal(body, &subEvents); err != nil {
-		logger.Error("failed to unmarshal subscriptions", err)
+		logger.Error("sub: failed to unmarshal subscriptions", err)
 		return
 	}
 
@@ -60,19 +57,8 @@ func SubscribeAll() {
 		if slices.Contains(eventsToSubscribeTo, sub.Type) {
 			if sub.Status == "enabled" {
 				eventsToSubscribeTo = slices.Delete(eventsToSubscribeTo, slices.Index(eventsToSubscribeTo, sub.Type), slices.Index(eventsToSubscribeTo, sub.Type)+1)
-			} else {
-				logger.Log("removing non enabled event", "event", sub.Type, "status", sub.Status, "eventID", sub.ID)
-				eventsToUnSubscribeFrom = append(eventsToUnSubscribeFrom, sub.ID)
 			}
 		}
-	}
-
-	for _, eventID := range eventsToUnSubscribeFrom {
-		body, err := twitchapi.AsUser().Delete(fmt.Sprintf("/eventsub/subscriptions?id=%s", eventID))
-		if err != nil {
-			logger.Error("Faild to delete old event", err, "eventID", eventID)
-		}
-		logger.Log("event sub body", "body", string(body))
 	}
 
 	for _, event := range eventsToSubscribeTo {
@@ -81,29 +67,54 @@ func SubscribeAll() {
 			subChat()
 		case "channel.channel_points_custom_reward_redemption.add":
 			subRedemptions()
-		case "strem.online":
-			if err := Subscribe("strem.online", "1", Condition{
+		case "stream.online":
+			if err := Subscribe("stream.online", "1", Condition{
 				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
 			}); err != nil {
-				logger.Error("failed to subscribe to chat messages", err)
+				logger.Error("sub: failed to subscribe to stream.online", err)
 			}
-		case "strem.offline":
-			if err := Subscribe("strem.offline", "1", Condition{
+		case "stream.offline":
+			if err := Subscribe("stream.offline", "1", Condition{
 				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
 			}); err != nil {
-				logger.Error("failed to subscribe to chat messages", err)
+				logger.Error("sub: failed to subscribe to stream.offline", err)
 			}
 		case "channel.raid":
 			if err := Subscribe("channel.raid", "1", Condition{
-				"broadcaster_user_id": context.Get().GetBroadcaster().Id,
+				// "to_broadcaster_user_id":   context.Get().GetBroadcaster().Id,
+				"from_broadcaster_user_id": context.Get().GetBroadcaster().Id,
 			}); err != nil {
-				logger.Error("failed to subscribe to chat messages", err)
+				logger.Error("sub: failed to subscribe to channle.raid", err)
 			}
 		default:
-			logger.Warn("unknown subscription type", "type", event)
+			logger.Warn("sub: unknown subscription type", "type", event)
 		}
 	}
 
+}
+
+func UnsubAll() {
+	body, err := twitchapi.AsApp().Get("/eventsub/subscriptions")
+	if err != nil {
+		logger.Error("sub: failed to get subscriptions", err)
+		return
+	}
+	logger.Log("sub: list of subs", "body", body)
+	var subEvents SubEvents
+	if err := json.Unmarshal(body, &subEvents); err != nil {
+		logger.Error("sub: failed to unmarshal subscriptions", err)
+		return
+	}
+	for _, sub := range subEvents.Data {
+		if slices.Contains(eventsToSubscribeTo, sub.Type) {
+			if sub.Status == "enabled" {
+				_, err := twitchapi.AsApp().Delete(fmt.Sprintf("/eventsub/subscriptions?id=%s", sub.ID))
+				if err != nil {
+					logger.Error("sub: Faild to delete old event", err, "eventID", sub.ID)
+				}
+			}
+		}
+	}
 }
 
 func subChat() {

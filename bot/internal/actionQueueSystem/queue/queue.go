@@ -15,14 +15,14 @@ type Queue struct {
 	repeatDelay    time.Duration // how long to sleep before looping
 	persistent     bool          // keep worker alive when empty, or spin down
 	actions        []action.Action
-	actionData     []any
+	actionData     [][]any
 	actionIndex    int
 	actionDataNext any
 	running        bool
 	puased         time.Duration
 }
 
-func (q *Queue) AddActions(a action.Action, data any) {
+func (q *Queue) AddActions(a action.Action, data []any) {
 	if q.locked {
 		logger.Log("Queue Locked!", "queue", q.name)
 		return
@@ -32,7 +32,7 @@ func (q *Queue) AddActions(a action.Action, data any) {
 	q.OnAddAction(a, data)
 }
 
-func (q *Queue) AddActionsAtIndex(a action.Action, data any, index int) {
+func (q *Queue) AddActionsAtIndex(a action.Action, index int, data ...any) {
 	if q.locked {
 		logger.Log("Queue Locked!", "queue", q.name)
 		return
@@ -87,17 +87,17 @@ func (q *Queue) worker() {
 		q.actionIndex++
 		logger.Debug("running actoin", "queue", q.name, "index", q.actionIndex)
 		if !q.repeating {
-			q.RunAction(q.actions[0], q.actionData[0])
+			q.RunAction(q.actions[0], q.actionData[0]...)
 			q.actions = q.actions[1:]
 			q.actionData = q.actionData[1:]
 			q.actionIndex--
 			logger.Debug("index decremented", "queue", q.name, "index", q.actionIndex)
 		} else {
-			var data any
+			data := []any{}
 			if len(q.actionData) > 0 {
 				data = q.actionData[q.actionIndex-1]
 			}
-			q.RunAction(q.actions[q.actionIndex-1], data)
+			q.RunAction(q.actions[q.actionIndex-1], data...)
 		}
 
 		if len(q.actions) == q.actionIndex {
@@ -107,16 +107,16 @@ func (q *Queue) worker() {
 	}
 }
 
-func (q *Queue) RunAction(act action.Action, data any) {
-	q.RunActionFunc(act.Run, data)
+func (q *Queue) RunAction(act action.Action, data ...any) {
+	q.RunActionFunc(act.Run, data...)
 }
 
-func (q *Queue) OnAddAction(act action.Action, data any) {
-	q.RunActionFunc(act.OnAdd, data)
+func (q *Queue) OnAddAction(act action.Action, data ...any) {
+	q.RunActionFunc(act.OnAdd, data...)
 }
 
-func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, data any) {
-	flags := fn(q.actionDataNext, data)
+func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, data ...any) {
+	flags := fn(q.actionDataNext, data...)
 	if flags.Error != nil {
 		logger.Debug("actoin had flag Error")
 		logger.Error("error running action", flags.Error)
@@ -168,7 +168,7 @@ func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, d
 		}
 
 		for i, a := range flags.AddActions.Actions {
-			queue.AddActionsAtIndex(a, ActionData[i], index+i)
+			queue.AddActionsAtIndex(a, index+i, ActionData[i]...)
 		}
 
 	}

@@ -13,6 +13,7 @@ type Context struct {
 	LastChat    *datatypes.ChatMessageData
 	YappyChat   bool
 	IsLive      bool
+	CanShock    bool
 }
 
 var instance *Context

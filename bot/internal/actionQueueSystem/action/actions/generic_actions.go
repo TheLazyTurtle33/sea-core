@@ -12,6 +12,7 @@ import (
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
+	"go.bug.st/serial"
 )
 
 type ExampleActoin struct {
@@ -271,7 +272,6 @@ func (a RunAD) Run(passThrough any, v ...any) action.Flags {
 
 	steps := []int{180, 150, 120, 90, 60, 30}
 
-	a.Time = steps[len(steps)-1] // default to smallest
 	for _, step := range steps {
 		if a.Time >= step {
 			a.Time = step
@@ -341,7 +341,7 @@ type IfBool struct {
 	action.Action
 	TrueActoins  []action.Action
 	FalseActoins []action.Action
-	ActoinData   []any
+	ActoinData   [][]any
 }
 
 func (a IfBool) Run(passThrough any, v ...any) action.Flags {
@@ -367,12 +367,86 @@ func (a IfBool) Run(passThrough any, v ...any) action.Flags {
 	}
 
 	if len(a.ActoinData) == 0 {
-		flags.AddActions.ActionData = v
+		for range len(flags.AddActions.Actions) {
+			flags.AddActions.ActionData = append(flags.AddActions.ActionData, v)
+		}
 	}
 	return flags
 }
 
 func (a IfBool) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	return flags
+}
+
+type SendSerialData struct {
+	action.Action
+}
+
+func (a SendSerialData) Run(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+
+	if len(v) < 3 {
+		flags.Error = fmt.Errorf("SendSerialData: Not Enough Vars passed, expectid 3 got %d", len(v))
+		logger.Log("v gotten", "v", v)
+		return flags
+	}
+
+	BaudRate, ok := v[0].(int)
+	if !ok {
+		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[0] to int. first var must be the BaudRate")
+		return flags
+	}
+	mode := &serial.Mode{
+		BaudRate: BaudRate,
+	}
+
+	portName, ok := v[1].(string)
+	if !ok {
+		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[1] to string. second var must be the Port Name")
+		return flags
+	}
+
+	port, err := serial.Open(portName, mode)
+	if err != nil {
+		flags.Error = fmt.Errorf("SendSerialData: Error opeing port: %w", err)
+		return flags
+	}
+
+	defer port.Close()
+
+	Message, ok := v[2].(string)
+	if !ok {
+		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[2] to string. third var must be the the Message")
+		return flags
+	}
+
+	n, err := port.Write([]byte(Message))
+	if err != nil {
+		flags.Error = fmt.Errorf("SendSerialData: Error Seding Data to port: %w", err)
+		return flags
+	}
+
+	logger.Log("SendSerialData: Sent bytes to port", "port", portName, "#bytes", n)
+
+	return flags
+}
+
+func (a SendSerialData) OnAdd(passThrough any, v ...any) action.Flags {
+	flags := action.Flags{PassThrough: passThrough}
+	return flags
+}
+
+type Functoin struct {
+	action.Action
+	Fn func(passThrough any, v ...any) action.Flags
+}
+
+func (a Functoin) Run(passThrough any, v ...any) action.Flags {
+	return a.Fn(passThrough, v...)
+}
+
+func (a Functoin) OnAdd(passThrough any, v ...any) action.Flags {
 	flags := action.Flags{PassThrough: passThrough}
 	return flags
 }

@@ -37,7 +37,7 @@ func command(flags action.Flags, chat datatypes.ChatMessageData) action.Flags {
 		Actions: []action.Action{
 			&ReplyToMessage{Message: message},
 		},
-		ActionData: []any{chat},
+		ActionData: [][]any{{chat}},
 	}
 	return flags
 }
@@ -53,7 +53,6 @@ func schedualedMessage(flags action.Flags) action.Flags {
 			Actions: []action.Action{
 				&Delay{Duration: 60 * 5},
 			},
-			ActionData: []any{nil},
 		}
 		flags.Skip.Active = true
 	}
