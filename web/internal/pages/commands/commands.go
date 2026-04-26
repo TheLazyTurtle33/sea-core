@@ -55,8 +55,6 @@ func Page(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Println(r)
-
 	if r.URL.Query().Get("json") == "true" {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(commandsJSON)

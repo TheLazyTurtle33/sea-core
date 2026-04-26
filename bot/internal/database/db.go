@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/cleanup"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 	_ "github.com/lib/pq"
 )
 

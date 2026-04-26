@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 	"github.com/gorilla/websocket"
 )
 

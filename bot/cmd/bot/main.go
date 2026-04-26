@@ -7,11 +7,11 @@ import (
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/queue"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/api"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
+	"github.com/TheLazyTurtle33/sea-core/shared/cleanup"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 const baseURL = "https://api.twitch.tv/helix"

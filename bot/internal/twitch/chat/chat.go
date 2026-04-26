@@ -7,10 +7,10 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/queue"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/command"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 func HandleMessage(data datatypes.ChatMessageData) {

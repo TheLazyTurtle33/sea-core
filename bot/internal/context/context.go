@@ -5,7 +5,7 @@ import (
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/auth"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 type TTSContext struct {

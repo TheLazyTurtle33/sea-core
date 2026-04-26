@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/command"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/eventsub"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 // example endpoint web can call to send the oauth token to the bot

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/file"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 type Auth struct {
@@ -25,11 +25,12 @@ type Auth struct {
 
 func New() *Auth {
 	a := &Auth{}
-	secret := file.New("/app/data/secret.json").Read()
-	if secret == nil {
+	secret, err := os.ReadFile("/app/data/secret.json")
+	if err != nil {
 		logger.Error("secret.json is required. look at secret.json.example for an example", nil)
+		return nil
 	}
-	err := json.Unmarshal(secret, a)
+	err = json.Unmarshal(secret, a)
 	if err != nil {
 		logger.Error("failed to unmarshal secret.json", err)
 	}
@@ -190,7 +191,7 @@ func (a *Auth) StartExpectingToken(tokenType string) {
 }
 
 func (a *Auth) Save() {
-	file.New("/app/data/secret.json").Save(a.Export())
+	os.WriteFile("/app/data/secret.json", a.Export(), 0644)
 }
 
 func (a *Auth) Export() []byte {

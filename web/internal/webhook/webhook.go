@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 	"github.com/TheLazyTurtle33/sea-core/web/internal/botclient"
 )
 
@@ -38,7 +38,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	case "notification":
 		handleNotification(w, body)
 	case "revocation":
-		log.Println("subscription revoked:", r.Header.Get("Twitch-Eventsub-Subscription-Type"))
+		logger.Log("subscription revoked:", r.Header.Get("Twitch-Eventsub-Subscription-Type"))
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -50,7 +50,7 @@ func verifySignature(headers http.Header, body []byte) bool {
 
 	auth, err := botclient.GetAuth()
 	if err != nil {
-		log.Println(err)
+		logger.Error("webhook: faid to get auth", err)
 		return false
 	}
 	mac := hmac.New(sha256.New, []byte(auth["client_secret"]))
@@ -76,7 +76,7 @@ func handleChallenge(w http.ResponseWriter, body []byte) {
 func handleNotification(w http.ResponseWriter, body []byte) {
 	err := botclient.SendNotification(body)
 	if err != nil {
-		log.Println(err)
+		logger.Error("Webhook: faild to send nota", err)
 		http.Error(w, "failed to send notification", http.StatusInternalServerError)
 		return
 	}

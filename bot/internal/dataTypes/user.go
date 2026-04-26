@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 type User struct {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 type TwitchRedeem struct {

@@ -7,8 +7,8 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action/actions"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 // default actions and queue for redeems defined outside of the bot.

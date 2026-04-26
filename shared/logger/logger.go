@@ -7,8 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/cleanup"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/file"
+	"github.com/TheLazyTurtle33/sea-core/shared/cleanup"
 )
 
 const logDir = "/app/data/logs"
@@ -72,7 +71,8 @@ func Debug(msg string, args ...any) {
 
 func DebugToLogger(logger *slog.Logger, msg string, args ...any) {
 	CheckLogFileData()
-	if file.Exists("/app/data/debug") {
+	_, err := os.Stat("/app/data/debug")
+	if os.IsExist(err) {
 		logger.Debug(msg, args...)
 	}
 }

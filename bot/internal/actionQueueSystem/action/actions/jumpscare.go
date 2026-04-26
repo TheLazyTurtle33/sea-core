@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 	"github.com/TheLazyTurtle33/sea-core/shared/obs"
 )
 

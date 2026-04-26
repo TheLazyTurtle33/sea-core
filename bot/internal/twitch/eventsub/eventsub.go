@@ -8,10 +8,10 @@ import (
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/logger"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/chat"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/redeems"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 const webhookCallbackUrl = "https://lazyturtle33.live/eventsub"
