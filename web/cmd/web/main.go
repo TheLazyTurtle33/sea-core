@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/TheLazyTurtle33/sea-core/web/internal/auth"
+	"github.com/TheLazyTurtle33/sea-core/web/internal/data"
 	"github.com/TheLazyTurtle33/sea-core/web/internal/webhook"
 
 	"github.com/TheLazyTurtle33/sea-core/web/internal/pages/commands"
@@ -19,6 +20,7 @@ func main() {
 	http.HandleFunc("/auth/user", auth.UserHandler)
 	http.HandleFunc("/auth/bot", auth.BotHandler)
 	http.HandleFunc("/eventsub", webhook.Handler)
+	http.HandleFunc("/reminders", data.HandleReminder)
 
 	// front end
 	http.HandleFunc("/", landing.Page)

@@ -11,13 +11,18 @@ import (
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 )
 
+const (
+	moderator = "moderator"
+	everyone  = "everyone"
+)
+
 var TestCommand = Command{
 	Name:        "Test",
 	Triggers:    []string{"!test"},
 	Description: "A test command.",
 	Usage:       "!test",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "test passed! :3"}},
-	AlowedUsers: []string{"everyone"},
+	AlowedUsers: []string{everyone},
 	QueueName:   "default",
 	Blocking:    false,
 	Active:      true,
@@ -29,14 +34,13 @@ var DiscordLink = Command{
 	Description: "Get the discord invite link.",
 	Usage:       "!discord",
 	Actions:     []action.Action{&actions.CreateDiscordInvite{}},
-	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 var ShoutOutCommand = Command{
 	Name:        "Shout out",
 	Triggers:    []string{"!so"},
 	Actions:     []action.Action{&actions.ShoutOut{}},
-	AlowedUsers: []string{"moderator"},
+	AlowedUsers: []string{moderator},
 	Active:      true,
 }
 
@@ -46,7 +50,6 @@ var Lurk = Command{
 	Description: "Thanks the viewer for lurking.",
 	Usage:       "!lurk",
 	Actions:     []action.Action{&actions.CreateLurkText{}, &actions.SendMessage{}},
-	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -56,7 +59,6 @@ var CommandsCommand = Command{
 	Description: "Gives a link to the webpage with all the commands",
 	Usage:       "!commands",
 	Actions:     []action.Action{&actions.SendMessage{Message: "Check out all my wondefull commands :3 (lazyturtle33.live/commands)"}},
-	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -73,7 +75,7 @@ var BRBCommand = Command{
 	Triggers:    []string{"!brb"},
 	Actions:     []action.Action{&actions.SetScene{Scene: "BRB"}, &actions.RunAD{}},
 	Active:      true,
-	AlowedUsers: []string{"moderator"},
+	AlowedUsers: []string{moderator},
 }
 
 var YappyChatCommad = Command{
@@ -87,7 +89,7 @@ var YappyChatCommad = Command{
 		},
 	},
 	Active:      true,
-	AlowedUsers: []string{"moderator"},
+	AlowedUsers: []string{moderator},
 }
 
 var ShockCommand = Command{
@@ -103,7 +105,6 @@ var SupportMeCommand = Command{
 	Description: "Get the links you can support me at <3",
 	Usage:       "!kofi",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "so many places to suport me :o pick your poison ig: https://ko-fi.com/thelazyturtle33, https://wish.ly/thelazyturtle33, https://fansly.com/LazyTurtle33"}},
-	AlowedUsers: []string{"everyone"},
 	Active:      true,
 }
 
@@ -122,8 +123,7 @@ var TimeCommand = Command{
 		},
 		&actions.ReplyToMessage{},
 	},
-	AlowedUsers: []string{"everyone"},
-	Active:      true,
+	Active: true,
 }
 
 var SocalsCommand = Command{
@@ -132,7 +132,15 @@ var SocalsCommand = Command{
 	Description: "Get the links to all my socals",
 	Usage:       "!socals",
 	Actions:     []action.Action{&actions.ReplyToMessage{Message: "Everywhere you can find me: https://www.youtube.com/@The_LazyTurtle33, https://www.tiktok.com/@thelazyturtle33, https://bsky.app/profile/lazyturtle33.bsky.social,  https://fansly.com/LazyTurtle33"}},
-	AlowedUsers: []string{"everyone"},
+	Active:      true,
+}
+
+var ReminderCommand = Command{
+	Name:        "Reminder",
+	Triggers:    []string{"!remind", "!r"},
+	Usage:       "!reminder Message",
+	Actions:     []action.Action{&actions.AddReminder{}},
+	AlowedUsers: []string{moderator},
 	Active:      true,
 }
 
@@ -150,6 +158,7 @@ var Commands = []*Command{
 	&ShockCommand,
 	&TimeCommand,
 	&SocalsCommand,
+	&ReminderCommand,
 }
 
 func RegisterCommands() {

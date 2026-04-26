@@ -8,6 +8,7 @@ services:
       - "8080:8080"
     volumes:
       - ./data/web:/app/data
+      - ./data/shared:/app/shared
 
   bot:
     build:
@@ -16,6 +17,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/bot:/app/data
+      - ./data/shared:/app/shared
       - ~/.ssh/tts_key:/root/.ssh/tts_key:ro
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
