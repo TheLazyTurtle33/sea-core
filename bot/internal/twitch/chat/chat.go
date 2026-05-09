@@ -4,10 +4,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/queue"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/tts"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/command"
 	"github.com/TheLazyTurtle33/sea-core/shared/logger"
@@ -19,10 +17,10 @@ func HandleMessage(data datatypes.ChatMessageData) {
 	parseForHello(data)
 	parseForCommand(data)
 
-	if context.Get().TTSContext.YappyChat {
-		q := queue.GetQueue("tts")
-		q.AddAction(tts.TTS{Message: data.Message.Text, Name: data.ChatterUserLogin}, []any{})
-	}
+	// if context.Get().TTSContext.YappyChat {
+	// 	q := queue.GetQueue("tts")
+	// 	q.AddAction(tts.TTS{Message: data.Message.Text, Name: data.ChatterUserLogin}, []any{})
+	// }
 
 }
 

@@ -9,39 +9,36 @@ import (
 )
 
 type Queue struct {
-	name           string
-	locked         bool
-	repeating      bool
-	repeatDelay    time.Duration // how long to sleep before looping
-	persistent     bool          // keep worker alive when empty, or spin down
-	actions        []action.Action
-	actionData     [][]any
-	actionIndex    int
-	actionDataNext any
-	running        bool
-	puased         time.Duration
+	name        string
+	locked      bool
+	repeating   bool
+	repeatDelay time.Duration // how long to sleep before looping
+	persistent  bool          // keep worker alive when empty, or spin down
+	actions     []action.Action
+	actionIndex int
+	passThrough action.ActionData
+	running     bool
+	puased      time.Duration
 }
 
-func (q *Queue) AddAction(a action.Action, data []any) {
+func (q *Queue) AddAction(a action.Action) {
 	if q.locked {
-		logger.Log("Queue Locked!", "queue", q.name)
+		logger.Log("queue: Queue Locked!", "queue", q.name)
 		return
 	}
 	q.actions = append(q.actions, a)
-	q.actionData = append(q.actionData, data)
-	q.OnAddAction(a, data)
+	q.OnAddAction(a)
 }
 
-func (q *Queue) AddActionAtIndex(a action.Action, index int, data ...any) {
+func (q *Queue) AddActionAtIndex(a action.Action, index int) {
 	if q.locked {
-		logger.Log("Queue Locked!", "queue", q.name)
+		logger.Log("queue: Queue Locked!", "queue", q.name)
 		return
 	}
-	logger.Debug("num of actoins", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex, "inser index", index)
+	logger.Debug("queue: num of actoins", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex, "inser index", index)
 	q.actions = slices.Insert(q.actions, index, a)
-	q.actionData = slices.Insert(q.actionData, index, data)
-	logger.Debug("num of actoins post insert", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex)
-	q.OnAddAction(a, data)
+	logger.Debug("queue: num of actoins post insert", "num", len(q.actions), "queue", q.name, "action index", q.actionIndex)
+	q.OnAddAction(a)
 }
 
 func (q *Queue) Lock() {
@@ -57,7 +54,7 @@ func (q *Queue) Start() {
 		return
 	}
 	q.running = true
-	logger.Log("Queue started", "queue", q.name)
+	logger.Log("queue: Queue started", "queue", q.name)
 	go q.worker()
 }
 
@@ -87,17 +84,12 @@ func (q *Queue) worker() {
 		q.actionIndex++
 		logger.Debug("running actoin", "queue", q.name, "index", q.actionIndex)
 		if !q.repeating {
-			q.RunAction(q.actions[0], q.actionData[0]...)
+			q.RunAction(q.actions[0])
 			q.actions = q.actions[1:]
-			q.actionData = q.actionData[1:]
 			q.actionIndex--
 			logger.Debug("index decremented", "queue", q.name, "index", q.actionIndex)
 		} else {
-			data := []any{}
-			if len(q.actionData) > 0 {
-				data = q.actionData[q.actionIndex-1]
-			}
-			q.RunAction(q.actions[q.actionIndex-1], data...)
+			q.RunAction(q.actions[q.actionIndex-1])
 		}
 
 		if len(q.actions) == q.actionIndex {
@@ -107,19 +99,19 @@ func (q *Queue) worker() {
 	}
 }
 
-func (q *Queue) RunAction(act action.Action, data ...any) {
-	q.RunActionFunc(act.Run, data...)
+func (q *Queue) RunAction(act action.Action) {
+	q.RunActionFunc(act.Run, act.ActionData, act.MetaData)
 }
 
-func (q *Queue) OnAddAction(act action.Action, data ...any) {
-	q.RunActionFunc(act.OnAdd, data...)
+func (q *Queue) OnAddAction(act action.Action) {
+	q.RunActionFunc(act.OnAdd, act.ActionData, act.MetaData)
 }
 
-func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, data ...any) {
-	flags := fn(q.actionDataNext, data...)
+func (q *Queue) RunActionFunc(fn func(passThrough action.ActionData, actionData []action.ActionData) action.Flags, actionData []action.ActionData, metadata action.ActionMetaData) {
+	flags := fn(q.passThrough, actionData)
 	if flags.Error != nil {
-		logger.Debug("actoin had flag Error")
-		logger.Error("error running action", flags.Error)
+		logger.Debug("queue: actoin had flag Error")
+		logger.Error("queue: error running action", flags.Error)
 		return
 	}
 	if flags.Lock.Active {
@@ -147,14 +139,7 @@ func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, d
 		}
 	}
 	if flags.AddActions.Active {
-		logger.Debug("actoin had flag Add Actoin")
-
-		ActionData := flags.AddActions.ActionData
-		if dif := len(flags.AddActions.Actions) - len(ActionData); dif > 0 {
-			for range dif {
-				ActionData = append(ActionData, nil)
-			}
-		}
+		logger.Debug("queue: actoin had flag Add Actoin")
 
 		queue := q
 		if flags.AddActions.StringData != "" {
@@ -168,7 +153,7 @@ func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, d
 		}
 
 		for i, a := range flags.AddActions.Actions {
-			queue.AddActionAtIndex(a, index+i, ActionData[i]...)
+			queue.AddActionAtIndex(a, index+i)
 		}
 
 	}
@@ -186,7 +171,7 @@ func (q *Queue) RunActionFunc(fn func(passThrough any, v ...any) action.Flags, d
 			GetQueue(flags.Skip.StringData).Skip(flags.Skip.IntData)
 		}
 	}
-	q.actionDataNext = flags.PassThrough
+	q.passThrough = flags.PassThrough
 }
 
 func (q *Queue) Skip(skip int) {

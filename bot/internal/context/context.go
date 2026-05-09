@@ -15,7 +15,7 @@ type TTSContext struct {
 	YappyChat bool
 }
 
-const TTSDelayDefualt = 5 * time.Minute
+const TTSDelayDefualt = time.Minute
 
 type Context struct {
 	Auth        *auth.Auth

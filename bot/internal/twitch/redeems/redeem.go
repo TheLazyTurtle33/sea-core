@@ -44,9 +44,9 @@ func (r *Redeem) AddActions(data any) {
 		return
 	}
 	q := queue.GetQueue(r.QueueName)
-	for _, a := range r.Actions {
-		q.AddAction(a, []any{data})
-	}
+	// for _, a := range r.Actions {
+	// 	// q.AddAction(a, []any{data})
+	// }
 
 	q.Start()
 }

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
@@ -14,12 +15,26 @@ type Command struct {
 	Triggers    []string        `json:"triggers"`
 	Description string          `json:"description"`
 	Usage       string          `json:"usage"`
-	Actions     []action.Action `json:"-"`
+	Actions     []action.Action `json:"actions"`
 	QueueName   string          `json:"queue"`
 	Blocking    bool            `json:"blocking"`
 	Active      bool            `json:"is_active"`
 	AlowedUsers []string        `json:"alowed_users"`
 }
+
+// func MakeCommand(jsonData []byte) Command {
+// 	var cmd Command
+// 	json.Unmarshal(jsonData, &cmd)
+// 	for _, actionName := range cmd.ActionList {
+// 		action, err := action.GetActionByName(actionName)
+// 		if err != nil {
+// 			logger.Error("failed to get action by name", err)
+// 			continue
+// 		}
+// 		cmd.Actions = append(cmd.Actions, action)
+// 	}
+// 	return cmd
+// }
 
 func (c *Command) AddActions(data any) {
 	if !c.Active {
@@ -31,7 +46,8 @@ func (c *Command) AddActions(data any) {
 	q := queue.GetQueue(c.QueueName)
 	if len(c.AlowedUsers) == 0 || slices.Contains(c.AlowedUsers, "everyone") {
 		for _, a := range c.Actions {
-			q.AddAction(a, []any{data})
+			c.parseData(&a, data)
+			q.AddAction(a)
 		}
 	} else {
 		chatData, ok := data.(datatypes.ChatMessageData)
@@ -46,7 +62,8 @@ func (c *Command) AddActions(data any) {
 
 		if isAlowedUser(c.AlowedUsers, badges) {
 			for _, a := range c.Actions {
-				q.AddAction(a, []any{data})
+				c.parseData(&a, data)
+				q.AddAction(a)
 			}
 		}
 
@@ -59,6 +76,28 @@ func (c *Command) AddActions(data any) {
 	q.Start()
 }
 
+func (c *Command) parseData(a *action.Action, ChatMessageData any) {
+	if a.ActionData != nil {
+		for i := range a.ActionData {
+			switch a.ActionData[i].Type {
+			case action.ChatMessageType:
+				if a.ActionData[i].Data == nil {
+					a.ActionData[i].Data = ChatMessageData
+				}
+			case action.ActionsType:
+				acts, ok := a.ActionData[i].Data.([]action.Action)
+				if !ok {
+					logger.Error("expected []action.Action for ActionsType ActionData, got", fmt.Errorf("expected []action.Action for ActionsType ActionData, got %T", a.ActionData[i].Data))
+					continue
+				}
+				for j := range acts {
+					c.parseData(&acts[j], ChatMessageData)
+				}
+				a.ActionData[i].Data = acts
+			}
+		}
+	}
+}
 func isAlowedUser(alowedUsers, badges []string) bool {
 	if len(alowedUsers) == 0 || len(badges) == 0 {
 		return false

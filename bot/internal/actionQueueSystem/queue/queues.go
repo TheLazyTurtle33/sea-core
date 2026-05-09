@@ -1,12 +1,5 @@
 package queue
 
-import (
-	"time"
-
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
-	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action/actions"
-)
-
 var DefaultQueue = Queue{
 	name:        "default",
 	locked:      false,
@@ -20,14 +13,14 @@ var RedeemsQueue = Queue{
 	persistent: true,
 }
 
-var DiscordQueue = Queue{
-	name:        "Discord",
-	locked:      true,
-	repeating:   true,
-	persistent:  true,
-	repeatDelay: 45 * time.Minute,
-	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
-}
+// var DiscordQueue = Queue{
+// 	name:        "Discord",
+// 	locked:      true,
+// 	repeating:   true,
+// 	persistent:  true,
+// 	repeatDelay: 45 * time.Minute,
+// 	actions:     []action.Action{&actions.CreateDiscordInvite{}, &actions.SendMessage{}},
+// }
 
 var TTSQueue = Queue{
 	name:       "tts",
@@ -38,7 +31,7 @@ var TTSQueue = Queue{
 
 var Queues = []*Queue{
 	&DefaultQueue,
-	&DiscordQueue,
+	// &DiscordQueue,
 	&RedeemsQueue,
 	&TTSQueue,
 }
@@ -54,6 +47,6 @@ func GetQueue(name string) *Queue {
 
 func StartUp() {
 	DefaultQueue.Start()
-	DiscordQueue.puased += 30 * time.Minute
-	DiscordQueue.Start()
+	// DiscordQueue.puased += 30 * time.Minute
+	// DiscordQueue.Start()
 }

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
 )
 
 const botURL = "http://bot:9090"
@@ -78,7 +80,16 @@ func GetCommandsJson() ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("bot returned status: %d", resp.StatusCode)
 	}
-	var json []byte = make([]byte, resp.ContentLength)
-	_, err = resp.Body.Read(json)
-	return json, nil
+	var data json.RawMessage
+	logger.Log("client: ContentLength", "ContentLength", resp.ContentLength)
+	// var json []byte = make([]byte, resp.ContentLength)
+	// _, err = resp.Body.Read(json)
+	// return json, nil
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decomp json: %w", err)
+	}
+
+	return []byte(data), nil
+
 }
