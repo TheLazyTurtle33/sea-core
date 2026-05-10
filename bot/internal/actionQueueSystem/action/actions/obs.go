@@ -1,43 +1,50 @@
 package actions
 
-// import (
-// 	"fmt"
+import (
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/shared/obs"
+)
 
-// 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
-// 	"github.com/TheLazyTurtle33/sea-core/shared/obs"
-// )
+var SetScene = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		scene, err := parseStringParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
 
-// type SetScene struct {
-// 	action.Action
-// 	Scene string
-// }
+		client, err := obs.Get()
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
 
-// func (a SetScene) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
+		response, err := client.SetScene(scene)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
 
-// 	if a.Scene == "" {
-// 		val, ok := passThrough.(string)
-// 		if !ok {
-// 			flags.Error = fmt.Errorf("expected pass through value to be sting")
-// 			return flags
-// 		}
-// 		a.Scene = val
-// 	}
+		flags.PassThrough = action.ActionData{Type: action.StringType, Data: response}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SetScene",
+		Description: "Switch the OBS scene.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.StringType,
+				Description: "Scene name.",
+				Required:    true,
+			},
+		},
+	},
+}
 
-// 	client, err := obs.Get()
-// 	if err != nil {
-// 		flags.Error = err
-// 		return flags
-// 	}
-
-// 	responce, err := client.SetScene(a.Scene)
-
-// 	flags.PassThrough = responce
-// 	flags.Error = err
-
-// 	return flags
-// }
-// func (a SetScene) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
+func init() {
+	action.ActionMap[SetScene.MetaData.Name] = SetScene
+}

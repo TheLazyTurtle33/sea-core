@@ -1,39 +1,53 @@
 package actions
 
-// import (
-// 	"fmt"
+import (
+	"fmt"
 
-// 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
-// 	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
-// 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
-// )
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
+	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
+)
 
-// type CreateLurkText struct {
-// 	action.Action
-// }
+var CreateLurkText = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		if len(actionData) == 0 || actionData[0].Type != action.ChatMessageType {
+			flags.Error = fmt.Errorf("CreateLurkText: expected chat message")
+			flags.Skip.Active = true
+			return flags
+		}
 
-// func (a CreateLurkText) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if len(v) == 0 {
-// 		flags.Error = fmt.Errorf("no data provided")
-// 		return flags
-// 	}
-// 	data, ok := v[0].(datatypes.ChatMessageData)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
-// 		flags.Skip = action.Flag{Active: true, IntData: 1}
-// 		return flags
-// 	}
-// 	if data.SourceBroadcasterUserID != "" && data.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
-// 		flags.Skip = action.Flag{Active: true, IntData: 1}
-// 		return flags
-// 	}
-// 	flags.PassThrough = "O: thx for the lurk " + data.ChatterUserName + " you da best <3 ^w^"
-// 	return flags
+		chat, ok := actionData[0].Data.(datatypes.ChatMessageData)
+		if !ok {
+			flags.Error = fmt.Errorf("CreateLurkText: expected chat message, got %T", actionData[0].Data)
+			flags.Skip.Active = true
+			return flags
+		}
 
-// }
+		if chat.SourceBroadcasterUserID != "" && chat.SourceBroadcasterUserID != context.Get().GetBroadcaster().Id {
+			flags.Skip.Active = true
+			return flags
+		}
 
-// func (a CreateLurkText) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
+		flags.PassThrough = action.ActionData{Type: action.StringType, Data: fmt.Sprintf("O: thx for the lurk %s you da best <3 ^w^", chat.ChatterUserName)}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "CreateLurkText",
+		Description: "Generate a lurk thank-you message.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.ChatMessageType,
+				Description: "The chat message that triggered the lurk.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+func init() {
+	action.ActionMap[CreateLurkText.MetaData.Name] = CreateLurkText
+}

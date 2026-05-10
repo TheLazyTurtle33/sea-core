@@ -93,7 +93,7 @@ func RequestRedeems() {
 		} else if fromDefinedOverrides, ok := definedOverrides[redeem.ID]; ok {
 			iDRedeemsMap[redeem.ID] = MakeRedeem(redeem, fromDefinedOverrides)
 		} else {
-			// iDRedeemsMap[redeem.ID] = MakeRedeem(redeem, DefaultExternalRedeem)
+			iDRedeemsMap[redeem.ID] = MakeRedeem(redeem, DefaultExternalRedeem)
 		}
 	}
 }

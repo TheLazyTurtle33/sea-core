@@ -11,15 +11,20 @@ import (
 )
 
 type Command struct {
-	Name        string          `json:"name"`
-	Triggers    []string        `json:"triggers"`
-	Description string          `json:"description"`
-	Usage       string          `json:"usage"`
-	Actions     []action.Action `json:"actions"`
-	QueueName   string          `json:"queue"`
-	Blocking    bool            `json:"blocking"`
-	Active      bool            `json:"is_active"`
-	AlowedUsers []string        `json:"alowed_users"`
+	// info
+	Name        string   `json:"name"`
+	Triggers    []string `json:"triggers"`
+	Description string   `json:"description"`
+	Usage       string   `json:"usage"`
+	Active      bool     `json:"is_active"`
+	// implementation
+	Actions           []action.Action `json:"actions"`
+	QueueName         string          `json:"queue"`
+	Blocking          bool            `json:"blocking"`
+	WorksInSharedCHat bool            `json:"works_in_shared_chat"`
+	// user restrictions
+	UsersList   []string `json:"user_list"`
+	IsBlackList bool     `json:"is_blacklist"`
 }
 
 // func MakeCommand(jsonData []byte) Command {
@@ -36,31 +41,37 @@ type Command struct {
 // 	return cmd
 // }
 
-func (c *Command) AddActions(data any) {
+func (c *Command) AddActions(data datatypes.ChatMessageData) {
+
 	if !c.Active {
 		return
 	}
 	if c.QueueName == "" {
 		c.QueueName = "default"
 	}
+
+	if data.SourceBroadcasterUserID == data.BroadcasterUserID && !c.WorksInSharedCHat {
+		return
+	}
+
 	q := queue.GetQueue(c.QueueName)
-	if len(c.AlowedUsers) == 0 || slices.Contains(c.AlowedUsers, "everyone") {
+	if len(c.UsersList) == 0 || (slices.Contains(c.UsersList, "everyone") != c.IsBlackList) { // use != as XOR
 		for _, a := range c.Actions {
 			c.parseData(&a, data)
 			q.AddAction(a)
 		}
 	} else {
-		chatData, ok := data.(datatypes.ChatMessageData)
-		if !ok {
-			logger.Error("if command has allowed user feild, you must provide chat data", nil)
-			return
-		}
 		badges := []string{}
-		for _, badge := range chatData.Badges {
+		for _, badge := range data.Badges {
 			badges = append(badges, badge.SetID)
 		}
 
-		if isAlowedUser(c.AlowedUsers, badges) {
+		if isAlowedUser(c.UsersList, badges) != c.IsBlackList { // use != as XOR
+			for _, a := range c.Actions {
+				c.parseData(&a, data)
+				q.AddAction(a)
+			}
+		} else if slices.Contains(c.UsersList, data.ChatterUserLogin) != c.IsBlackList { // use != as XOR
 			for _, a := range c.Actions {
 				c.parseData(&a, data)
 				q.AddAction(a)

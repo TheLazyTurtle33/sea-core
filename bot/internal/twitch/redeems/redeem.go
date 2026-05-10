@@ -44,9 +44,30 @@ func (r *Redeem) AddActions(data any) {
 		return
 	}
 	q := queue.GetQueue(r.QueueName)
-	// for _, a := range r.Actions {
-	// 	// q.AddAction(a, []any{data})
-	// }
-
+	for _, a := range r.Actions {
+		resolveRedeemActionData(&a, data)
+		q.AddAction(a)
+	}
 	q.Start()
+}
+
+func resolveRedeemActionData(a *action.Action, data any) {
+	if a.ActionData == nil {
+		return
+	}
+	for i := range a.ActionData {
+		switch a.ActionData[i].Type {
+		case action.RedeemType:
+			if a.ActionData[i].Data == nil {
+				a.ActionData[i].Data = data
+			}
+		case action.ActionsType:
+			if nested, ok := a.ActionData[i].Data.([]action.Action); ok {
+				for k := range nested {
+					resolveRedeemActionData(&nested[k], data)
+				}
+				a.ActionData[i].Data = nested
+			}
+		}
+	}
 }

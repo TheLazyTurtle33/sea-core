@@ -1,18 +1,20 @@
 package actions
 
-// import "github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+import "github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
 
-// type SendTTS struct {
-// 	action.Action
-// }
+var SendTTS = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SendTTS",
+		Description: "Placeholder TTS action.",
+	},
+}
 
-// func (a SendTTS) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-
-// 	return flags
-// }
-
-// func (a SendTTS) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
+func init() {
+	action.ActionMap[SendTTS.MetaData.Name] = SendTTS
+}

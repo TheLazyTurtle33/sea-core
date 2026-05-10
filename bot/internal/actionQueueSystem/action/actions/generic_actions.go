@@ -2,24 +2,32 @@ package actions
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/context"
 	datatypes "github.com/TheLazyTurtle33/sea-core/bot/internal/dataTypes"
 	twitchapi "github.com/TheLazyTurtle33/sea-core/bot/internal/twitch/api"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
+	"go.bug.st/serial"
 )
 
-var ExampleActoin = action.Action{
+const (
+	defaultADLength = 60
+)
+
+var ExampleAction = action.Action{
 	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
-		flags := action.Flags{PassThrough: passThrough}
-		return flags
+		return action.Flags{PassThrough: passThrough}
 	},
 	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
-		flags := action.Flags{PassThrough: passThrough}
-		return flags
+		return action.Flags{PassThrough: passThrough}
 	},
 	MetaData: action.ActionMetaData{
 		Name:        "ExampleAction",
-		Description: "This is an example action that does nothing. It can be used as a template for creating new actions.",
+		Description: "A template action that does nothing.",
 	},
 }
 
@@ -27,548 +35,535 @@ var ReplyToMessage = action.Action{
 	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
 		flags := action.Flags{PassThrough: passThrough}
 		if len(actionData) < 1 {
-
 			flags.Error = fmt.Errorf("no data provided")
 			return flags
 		}
-		var Message string
-
-		if len(actionData) > 1 {
-			if actionData[1].Type == action.StringType {
-				Message = actionData[1].Data.(string)
-			} else {
-				flags.Error = fmt.Errorf("expected string data for message, got %T", actionData[1].Data)
-				return flags
-			}
-		} else {
-			if passThrough.Type == action.StringType {
-				Message = passThrough.Data.(string)
-			} else {
-				flags.Error = fmt.Errorf("expected string data for message in passThrough, got %T. you must provide a string for the message in there actionData or passThrough", passThrough.Data)
-				return flags
-			}
-		}
 
 		if actionData[0].Type != action.ChatMessageType {
-			flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", actionData[0].Data)
+			flags.Error = fmt.Errorf("expected ChatMessageData, got %T", actionData[0].Data)
 			return flags
 		}
-		data := actionData[0].Data.(datatypes.ChatMessageData)
-		_, err := twitchapi.AsBot().SendReply(Message, data.MessageID)
+		data, ok := actionData[0].Data.(datatypes.ChatMessageData)
+		if !ok {
+			flags.Error = fmt.Errorf("expected ChatMessageData, got %T", actionData[0].Data)
+			return flags
+		}
+
+		message, err := parseStringParam(passThrough, actionData, 1)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+
+		_, err = twitchapi.AsBot().SendReply(message, data.MessageID)
 		if err != nil {
 			flags.Error = err
 		}
 		return flags
 	},
 	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
-		flags := action.Flags{PassThrough: passThrough}
-		return flags
+		return action.Flags{PassThrough: passThrough}
 	},
 	MetaData: action.ActionMetaData{
 		Name:        "ReplyToMessage",
-		Description: "Replay to a message",
+		Description: "Reply to a chat message.",
 		RunData: []action.ActionData{
 			{
 				Type:        action.ChatMessageType,
-				Description: "The chat message to reply to",
+				Description: "The chat message to reply to.",
 				Required:    true,
 			},
 			{
 				Type:        action.StringType,
-				Description: "The message to send as a reply. if not provided, will use passThrough as the message. passThrough must be a string if this is not provided.",
+				Description: "The reply text. If omitted, passThrough must contain a string.",
 				Required:    false,
 			},
 		},
 	},
 }
 
-// // generic actions
-// type ReplyToMessage struct {
-// 	action.Action
-// 	Message string
-// }
-
-// func (a ReplyToMessage) Run(passThrough any, v ...any) action.Flags { // v[0] is the message, v[1] is the CommandData or message is defined at creation, then v[0] is the CommandData
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if len(v) == 0 {
-// 		flags.Error = fmt.Errorf("no data provided")
-// 		return flags
-// 	}
-// 	if a.Message == "" {
-// 		message, ok := passThrough.(string)
-// 		if !ok {
-// 			flags.Error = fmt.Errorf("no message provided")
-// 			return flags
-// 		}
-// 		a.Message = message
-// 	}
-// 	data, ok := v[0].(datatypes.ChatMessageData)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("expected ChatMessageData or nil, got %T", v[0])
-// 		return flags
-// 	}
-// 	_, err := twitchapi.AsBot().SendReply(a.Message, data.MessageID)
-// 	if err != nil {
-// 		flags.Error = err
-// 	}
-// 	return flags
-// }
-
-// func (a ReplyToMessage) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type SendMessage struct {
-// 	action.Action
-// 	Message string
-// }
-
-// func (a SendMessage) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if a.Message == "" {
-// 		message, ok := passThrough.(string)
-// 		if !ok {
-// 			flags.Error = fmt.Errorf("no message provided")
-// 			return flags
-// 		}
-// 		a.Message = message
-// 	}
-// 	_, err := twitchapi.AsBot().SendMessage(a.Message)
-// 	if err != nil {
-// 		flags.Error = err
-// 	}
-// 	return flags
-// }
-
-// func (a SendMessage) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type SendAnnouncement struct {
-// 	action.Action
-// 	Message string
-// 	Color   string
-// }
-
-// func (a SendAnnouncement) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if a.Message == "" {
-// 		message, ok := passThrough.(string)
-// 		if ok {
-// 			a.Message = message
-// 		} else {
-// 			announcement, ok := passThrough.([]string)
-// 			if !ok || len(announcement) != 2 {
-// 				flags.Error = fmt.Errorf("no message or color provided")
-// 				return flags
-// 			}
-// 			a.Message = announcement[0]
-// 			a.Color = announcement[1]
-// 		}
-// 	}
-// 	if a.Color == "" {
-// 		a.Color = "primary"
-// 	}
-// 	logger.Debug("Sending Announcement", "message", a.Message, "color", a.Color)
-// 	body, err := twitchapi.AsBot().SendAnnouncement(a.Message, a.Color)
-// 	if err != nil {
-// 		flags.Error = err
-// 		return flags
-// 	}
-
-// 	logger.Debug("response", "body", string(body))
-
-// 	return flags
-// }
-
-// func (a SendAnnouncement) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type Delay struct {
-// 	action.Action
-// 	Duration time.Duration
-// }
-
-// func (a Delay) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if a.Duration == 0 {
-// 		duration, ok := passThrough.(int)
-// 		if !ok {
-// 			flags.Error = fmt.Errorf("no duration provided")
-// 			return flags
-// 		}
-// 		a.Duration = time.Duration(duration)
-// 	}
-// 	time.Sleep(a.Duration)
-// 	return flags
-// }
-
-// func (a Delay) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// const (
-// 	// Log Sceeme format:
-// 	// reserved (bit 5-15 ) | Log level (bit 2-4) | Loggers (bit 0-1)
-// 	// (0 0 0 0 0 0 0 0 0 0 0) (0 0 0) (0 0)
-
-// 	LogInfo    = 0b00
-// 	LogWarning = 0b01
-// 	LogError   = 0b10
-// 	LogDebug   = 0b11
-
-// 	// logger logic inverted, when 0 print to that logger, when 1 do not print to that logger. this allows for a default of printing to all loggers when sceeme is 0, and allows for easy combination of loggers by setting bits to 1 for loggers you do not want to print to.
-// 	LogAllLogger    = 0b00000
-// 	LogLoggerStdout = 0b11000 // skips other loggers, not intended to be staked.
-// 	LogLoggerFile   = 0b10100 // skips other loggers, not intended to be staked.
-// 	LogLoggerWeb    = 0b01100 // skips other loggers, not intended to be staked. not implemented yet, would log to web dashboard
-// 	LogSkipStdout   = 0b00100
-// 	LogSkipFile     = 0b01000
-// 	LogSkipWeb      = 0b10000 // not implemented yet, would skip logging to web dashboard
-
-// )
-
-// // This is a generic log action that can be used to log messages to the console, file, or web dashboard.
-// // The message can be defined at creation or passed in as data.
-// // The sceeme can be used to define the format of the log message and which loggers to use.
-// type Log struct {
-// 	action.Action
-// 	Message   string                          // optional. if not provided, will use v[0] as the message if it is a string
-// 	Sceeme    int                             // optional. if not provided, will output in text format to all loggers. see Log Sceeme constants for more details.
-// 	Data      []any                           // optional. additional data to pass to log. sceemes can use this data to output in different formats or include additional information in the log message. if empty, will use v[1:] as data. if nil will not pass any additional data to log.
-// 	Formatter func(data []any) ([]any, error) // optional. if sceeme is LogSceemeCustom, this formatter will be used to format the log message. it takes in the data and returns the formatted data to pass to the logger. if not provided, will pass data as is.
-// }
-
-// func (a Log) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if a.Message == "" {
-// 		message, ok := passThrough.(string)
-// 		if !ok {
-// 			flags.Error = fmt.Errorf("no message provided")
-// 			return flags
-// 		}
-// 		a.Message = message
-// 	}
-
-// 	if len(a.Data) == 0 {
-// 		a.Data = v
-// 	} else if a.Data == nil {
-// 		a.Data = []any{}
-// 	}
-
-// 	outData := []any{}
-// 	loggers := []*slog.Logger{}
-
-// 	if a.Formatter != nil {
-// 		var err error
-// 		outData, err = a.Formatter(a.Data)
-// 		if err != nil {
-// 			flags.Error = err
-// 			return flags
-// 		}
-// 	} else {
-// 		outData = a.Data
-// 	}
-
-// 	if a.Sceeme&LogSkipStdout == 0 {
-// 		loggers = append(loggers, logger.StanderOutLogger)
-// 	}
-// 	if a.Sceeme&LogSkipFile == 0 {
-// 		loggers = append(loggers, logger.FileLogger)
-// 	}
-// 	// if a.Sceeme&LogSkipWeb == 0 {
-// 	// 	loggers = append(loggers, logger.WebLogger)
-// 	// }
-
-// 	for _, l := range loggers {
-// 		switch a.Sceeme & 0b11 {
-// 		case LogInfo:
-// 			l.Info(a.Message, outData...)
-// 		case LogWarning:
-// 			l.Warn(a.Message, outData...)
-// 		case LogError:
-// 			l.Error(a.Message, outData...)
-// 		case LogDebug:
-// 			logger.DebugToLogger(l, a.Message, outData...)
-// 		default:
-// 			flags.Error = fmt.Errorf("invalid log level")
-// 			return flags
-// 		}
-// 	}
-
-// 	return flags
-// }
-
-// func (a Log) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// const defaultADLeanth = 60
-
-// type RunAD struct {
-// 	action.Action
-// 	Time int
-// }
-
-// func (a RunAD) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-
-// 	if a.Time <= 0 {
-// 		a.Time = resolveTime(passThrough, v)
-// 	}
-
-// 	steps := []int{180, 150, 120, 90, 60, 30}
-
-// 	for _, step := range steps {
-// 		if a.Time >= step {
-// 			a.Time = step
-// 			break
-// 		}
-// 	}
-
-// 	if _, err := twitchapi.AsUser().Post("/channels/commercial", fmt.Sprintf(`
-// 		{
-// 			"broadcaster_id": %s,
-//   			"length": %d
-// 		}
-// 		`,
-// 		context.Get().GetBroadcaster().Id,
-// 		a.Time,
-// 	)); err != nil {
-// 		flags.Error = err
-// 	}
-
-// 	return flags
-// }
-
-// func resolveTime(passThrough any, v []any) int {
-// 	if time, ok := passThrough.(int); ok {
-// 		return time
-// 	}
-
-// 	if chat, ok := v[0].(datatypes.ChatMessageData); ok {
-// 		if words := strings.Split(chat.Message.Text, " "); len(words) > 1 {
-// 			if t, err := strconv.Atoi(words[1]); err == nil {
-// 				return t
-// 			}
-// 		}
-// 	}
-
-// 	return defaultADLeanth
-// }
-
-// func (a RunAD) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type SetYappyChat struct {
-// 	action.Action
-// 	Mode   bool
-// 	Toggle bool
-// }
-
-// func (a SetYappyChat) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if a.Toggle {
-// 		context.Get().TTSContext.YappyChat = !context.Get().TTSContext.YappyChat
-// 	} else {
-// 		context.Get().TTSContext.YappyChat = a.Mode
-// 	}
-
-// 	if context.Get().TTSContext.YappyChat {
-// 		context.Get().TTSContext.Delay = 0
-// 	} else {
-// 		context.Get().TTSContext.Delay = context.TTSDelayDefualt
-// 	}
-
-// 	flags.PassThrough = context.Get().TTSContext.YappyChat
-// 	return flags
-// }
-
-// func (a SetYappyChat) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type IfBool struct {
-// 	action.Action
-// }
-
-// func (a IfBool) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	b, ok := passThrough.(bool)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("Expexctd bool")
-// 		return flags
-// 	}
-
-// 	if len(v) != 4 {
-// 		flags.Error = fmt.Errorf("IfBool action expects 4 parameters: TrueActions []action.Action, FalseActions []action.Action, TrueActionData [][]any, FalseActionData [][]any. got %d", len(v))
-// 		return flags
-// 	}
-
-// 	TrueActoins := v[0].([]action.Action)
-// 	FalseActoins := v[1].([]action.Action)
-// 	var TrueActionData [][]any = nil
-// 	TrueActionDataTemp := v[2]
-// 	var FalseActionData [][]any = nil
-// 	FalseActionDataTemp := v[3]
-
-// 	if TrueActionDataPerAction, ok := TrueActionDataTemp.([]any); ok {
-// 		if TrueActionDataPerActionUnique, ok := TrueActionDataTemp.([][]any); ok {
-// 			TrueActionData = TrueActionDataPerActionUnique
-// 		} else {
-// 			for range len(TrueActoins) {
-// 				TrueActionData = append(TrueActionData, TrueActionDataPerAction)
-// 			}
-// 		}
-// 	} else {
-// 		for range len(TrueActoins) {
-// 			TrueActionData = append(TrueActionData, []any{TrueActionDataTemp})
-// 		}
-// 	}
-
-// 	if FalseActionDataPerAction, ok := FalseActionDataTemp.([]any); ok {
-// 		if FalseActionDataPerActionUnique, ok := FalseActionDataTemp.([][]any); ok {
-// 			FalseActionData = FalseActionDataPerActionUnique
-// 		} else {
-// 			for range len(FalseActoins) {
-// 				FalseActionData = append(FalseActionData, FalseActionDataPerAction)
-// 			}
-// 		}
-// 	} else {
-// 		for range len(FalseActoins) {
-// 			FalseActionData = append(FalseActionData, []any{FalseActionDataTemp})
-// 		}
-// 	}
-
-// 	if b {
-// 		flags.AddActions = action.Flag{
-// 			Active:     true,
-// 			Actions:    TrueActoins,
-// 			ActionData: TrueActionData,
-// 		}
-// 	} else {
-// 		flags.AddActions = action.Flag{
-// 			Active:     true,
-// 			Actions:    FalseActoins,
-// 			ActionData: FalseActionData,
-// 		}
-// 	}
-
-// 	return flags
-// }
-
-// func (a IfBool) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type SendSerialData struct {
-// 	action.Action
-// }
-
-// func (a SendSerialData) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-
-// 	if len(v) < 3 {
-// 		flags.Error = fmt.Errorf("SendSerialData: Not Enough Vars passed, expectid 3 got %d", len(v))
-// 		logger.Log("v gotten", "v", v)
-// 		return flags
-// 	}
-
-// 	BaudRate, ok := v[0].(int)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[0] to int. first var must be the BaudRate")
-// 		return flags
-// 	}
-// 	mode := &serial.Mode{
-// 		BaudRate: BaudRate,
-// 	}
-
-// 	portName, ok := v[1].(string)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[1] to string. second var must be the Port Name")
-// 		return flags
-// 	}
-
-// 	port, err := serial.Open(portName, mode)
-// 	if err != nil {
-// 		flags.Error = fmt.Errorf("SendSerialData: Error opeing port: %w", err)
-// 		return flags
-// 	}
-
-// 	defer port.Close()
-
-// 	Message, ok := v[2].(string)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("SendSerialData: Faild to cast v[2] to string. third var must be the the Message")
-// 		return flags
-// 	}
-
-// 	n, err := port.Write([]byte(Message))
-// 	if err != nil {
-// 		flags.Error = fmt.Errorf("SendSerialData: Error Seding Data to port: %w", err)
-// 		return flags
-// 	}
-
-// 	logger.Log("SendSerialData: Sent bytes to port", "port", portName, "#bytes", n)
-
-// 	return flags
-// }
-
-// func (a SendSerialData) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type Functoin struct {
-// 	action.Action
-// 	Fn func(passThrough any, v ...any) action.Flags
-// }
-
-// func (a Functoin) Run(passThrough any, v ...any) action.Flags {
-// 	return a.Fn(passThrough, v...)
-// }
-
-// func (a Functoin) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
-
-// type CompleteRedeemAction struct {
-// 	action.Action
-// }
-
-// func (a CompleteRedeemAction) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	if len(v) == 0 {
-// 		flags.Error = fmt.Errorf("no data provided")
-// 		return flags
-// 	}
-// 	data, ok := v[0].(datatypes.RedemptionData)
-// 	if !ok {
-// 		flags.Error = fmt.Errorf("expected RedemptionData, got %T", v[0])
-// 		return flags
-// 	}
-// 	_, err := twitchapi.AsUser().Patch("/channel_points/custom_rewards/redemptions?broadcaster_id="+context.Get().GetBroadcaster().Id+"&reward_id="+data.Reward.ID+"&id="+data.ID, `{"status":"FULFILLED"}`)
-// 	if err != nil {
-// 		flags.Error = err
-// 		return flags
-// 	}
-// 	logger.Log("Redeem completed", "ID", data.Reward.ID) // , "Response", string(resp)
-
-// 	return flags
-// }
-
-// func (a CompleteRedeemAction) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
+var SendMessage = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		message, err := parseStringParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		_, err = twitchapi.AsBot().SendMessage(message)
+		if err != nil {
+			flags.Error = err
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SendMessage",
+		Description: "Send a standard chat message.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.StringType,
+				Description: "The message text to send.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+var SendAnnouncement = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		message, err := parseStringParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		color, _ := parseStringParam(passThrough, actionData, 1)
+		if color == "" {
+			color = "primary"
+		}
+		_, err = twitchapi.AsBot().SendAnnouncement(message, color)
+		if err != nil {
+			flags.Error = err
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SendAnnouncement",
+		Description: "Send a channel announcement.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.StringType,
+				Description: "Announcement text.",
+				Required:    true,
+			},
+			{
+				Type:        action.StringType,
+				Description: "Announcement color.",
+				Required:    false,
+			},
+		},
+	},
+}
+
+var Delay = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		durationSeconds, err := parseIntParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		time.Sleep(time.Duration(durationSeconds) * time.Second)
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "Delay",
+		Description: "Pause execution for a number of seconds.",
+		RunData: []action.ActionData{
+			{
+				Type:        "int",
+				Description: "Number of seconds to pause.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+var Log = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		message, err := parseStringParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		logger.Log(message)
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "Log",
+		Description: "Log a message to the bot logger.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.StringType,
+				Description: "Log message.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+var RunAD = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		duration, err := parseIntParam(passThrough, actionData, 0)
+		if err != nil {
+			duration = resolveADTime(passThrough, actionData)
+		}
+		steps := []int{180, 150, 120, 90, 60, 30}
+		for _, step := range steps {
+			if duration >= step {
+				duration = step
+				break
+			}
+		}
+		if _, err := twitchapi.AsUser().Post("/channels/commercial", fmt.Sprintf(`{"broadcaster_id": %s, "length": %d}`, context.Get().GetBroadcaster().Id, duration)); err != nil {
+			flags.Error = err
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "RunAD",
+		Description: "Start a commercial for a broadcaster.",
+		RunData: []action.ActionData{
+			{
+				Type:        "int",
+				Description: "Commercial length in seconds.",
+				Required:    false,
+			},
+		},
+	},
+}
+
+var SetYappyChat = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		mode, err := parseBoolParam(passThrough, actionData, 0)
+		if err == nil {
+			context.Get().TTSContext.YappyChat = mode
+		} else if len(actionData) > 0 && actionData[0].Type == action.StringType {
+			command, _ := actionData[0].Data.(string)
+			if strings.EqualFold(command, "toggle") {
+				context.Get().TTSContext.YappyChat = !context.Get().TTSContext.YappyChat
+			} else {
+				mode = strings.EqualFold(command, "true") || strings.EqualFold(command, "on")
+				context.Get().TTSContext.YappyChat = mode
+			}
+		} else {
+			flags.Error = fmt.Errorf("no bool or toggle value provided")
+			return flags
+		}
+
+		if context.Get().TTSContext.YappyChat {
+			context.Get().TTSContext.Delay = 0
+		} else {
+			context.Get().TTSContext.Delay = context.TTSDelayDefualt
+		}
+		flags.PassThrough = action.ActionData{Type: "bool", Data: context.Get().TTSContext.YappyChat}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SetYappyChat",
+		Description: "Enable or disable yappy chat mode.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.StringType,
+				Description: "Toggle or set the mode. use 'toggle', 'true', or 'false'.",
+				Required:    false,
+			},
+		},
+	},
+}
+
+var IfBool = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		if passThrough.Type != "bool" {
+			flags.Error = fmt.Errorf("expected bool passThrough for IfBool action")
+			return flags
+		}
+		condition, ok := passThrough.Data.(bool)
+		if !ok {
+			flags.Error = fmt.Errorf("expected bool passThrough for IfBool action")
+			return flags
+		}
+		if len(actionData) < 2 {
+			flags.Error = fmt.Errorf("IfBool requires two Actions values: true and false action lists")
+			return flags
+		}
+
+		trueActions, ok := actionData[0].Data.([]action.Action)
+		if !ok {
+			flags.Error = fmt.Errorf("expected []action.Action for true actions, got %T", actionData[0].Data)
+			return flags
+		}
+		falseActions, ok := actionData[1].Data.([]action.Action)
+		if !ok {
+			flags.Error = fmt.Errorf("expected []action.Action for false actions, got %T", actionData[1].Data)
+			return flags
+		}
+
+		if condition {
+			flags.AddActions = action.Flag{Active: true, Actions: trueActions}
+		} else {
+			flags.AddActions = action.Flag{Active: true, Actions: falseActions}
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "IfBool",
+		Description: "Run either a true or false action list based on a boolean passThrough.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.ActionsType,
+				Description: "Actions to run when passThrough is true.",
+				Required:    true,
+			},
+			{
+				Type:        action.ActionsType,
+				Description: "Actions to run when passThrough is false.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+var SendSerialData = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		if len(actionData) < 3 {
+			flags.Error = fmt.Errorf("SendSerialData requires baud rate, port, and message")
+			return flags
+		}
+
+		baudRate, err := parseIntParam(passThrough, actionData, 0)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		portName, err := parseStringParam(passThrough, actionData, 1)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+		message, err := parseStringParam(passThrough, actionData, 2)
+		if err != nil {
+			flags.Error = err
+			return flags
+		}
+
+		mode := &serial.Mode{BaudRate: baudRate}
+		port, err := serial.Open(portName, mode)
+		if err != nil {
+			flags.Error = fmt.Errorf("SendSerialData: failed to open port: %w", err)
+			return flags
+		}
+		defer port.Close()
+
+		n, err := port.Write([]byte(message))
+		if err != nil {
+			flags.Error = fmt.Errorf("SendSerialData: failed to write port: %w", err)
+			return flags
+		}
+		logger.Log("SendSerialData: sent bytes", "port", portName, "bytes", n)
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "SendSerialData",
+		Description: "Write raw data to a serial port.",
+		RunData: []action.ActionData{
+			{Type: "int", Description: "Baud rate.", Required: true},
+			{Type: action.StringType, Description: "Serial port path.", Required: true},
+			{Type: action.StringType, Description: "Message to send.", Required: true},
+		},
+	},
+}
+
+var Function = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		if len(actionData) == 0 {
+			flags.Error = fmt.Errorf("Function action requires a function in actionData[0].Data")
+			return flags
+		}
+		fn, ok := actionData[0].Data.(func(action.ActionData, []action.ActionData) action.Flags)
+		if !ok {
+			flags.Error = fmt.Errorf("Function action data was not executable")
+			return flags
+		}
+		return fn(passThrough, actionData[1:])
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "Function",
+		Description: "Run a custom function defined in actionData[0].Data.",
+	},
+}
+
+var CompleteRedeemAction = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		if len(actionData) == 0 {
+			flags.Error = fmt.Errorf("CompleteRedeemAction requires redemption data")
+			return flags
+		}
+		data, ok := actionData[0].Data.(datatypes.RedemptionData)
+		if !ok {
+			flags.Error = fmt.Errorf("expected RedemptionData, got %T", actionData[0].Data)
+			return flags
+		}
+		_, err := twitchapi.AsUser().Patch(
+			"/channel_points/custom_rewards/redemptions?broadcaster_id="+context.Get().GetBroadcaster().Id+"&reward_id="+data.Reward.ID+"&id="+data.ID,
+			`{"status":"FULFILLED"}`,
+		)
+		if err != nil {
+			flags.Error = err
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "CompleteRedeemAction",
+		Description: "Mark a channel points redemption as fulfilled.",
+		RunData: []action.ActionData{
+			{
+				Type:        action.RedeemType,
+				Description: "The redemption data to complete.",
+				Required:    true,
+			},
+		},
+	},
+}
+
+func parseStringParam(passThrough action.ActionData, actionData []action.ActionData, idx int) (string, error) {
+	if len(actionData) > idx {
+		if actionData[idx].Type == action.StringType {
+			if value, ok := actionData[idx].Data.(string); ok {
+				return value, nil
+			}
+			if actionData[idx].Data == nil {
+				return "", fmt.Errorf("expected string data for param %d, got nil", idx)
+			}
+			return "", fmt.Errorf("expected string data for param %d, got %T", idx, actionData[idx].Data)
+		}
+	}
+	if passThrough.Type == action.StringType {
+		if value, ok := passThrough.Data.(string); ok {
+			return value, nil
+		}
+		return "", fmt.Errorf("expected passThrough string data, got %T", passThrough.Data)
+	}
+	return "", fmt.Errorf("no string data provided")
+}
+
+func parseIntParam(passThrough action.ActionData, actionData []action.ActionData, idx int) (int, error) {
+	if len(actionData) > idx {
+		switch v := actionData[idx].Data.(type) {
+		case int:
+			return v, nil
+		case int64:
+			return int(v), nil
+		case float64:
+			return int(v), nil
+		case string:
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return 0, err
+			}
+			return i, nil
+		case nil:
+			return 0, fmt.Errorf("expected int data for param %d, got nil", idx)
+		default:
+			return 0, fmt.Errorf("expected int data for param %d, got %T", idx, v)
+		}
+	}
+	switch v := passThrough.Data.(type) {
+	case int:
+		return v, nil
+	case int64:
+		return int(v), nil
+	case float64:
+		return int(v), nil
+	case string:
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			return 0, err
+		}
+		return i, nil
+	}
+	return 0, fmt.Errorf("no int data provided")
+}
+
+func parseBoolParam(passThrough action.ActionData, actionData []action.ActionData, idx int) (bool, error) {
+	if len(actionData) > idx {
+		switch v := actionData[idx].Data.(type) {
+		case bool:
+			return v, nil
+		case string:
+			return strings.EqualFold(v, "true") || strings.EqualFold(v, "on"), nil
+		case nil:
+			return false, fmt.Errorf("expected bool data for param %d, got nil", idx)
+		default:
+			return false, fmt.Errorf("expected bool data for param %d, got %T", idx, v)
+		}
+	}
+	if passThrough.Type == "bool" {
+		if value, ok := passThrough.Data.(bool); ok {
+			return value, nil
+		}
+		return false, fmt.Errorf("expected passThrough bool data, got %T", passThrough.Data)
+	}
+	return false, fmt.Errorf("no bool data provided")
+}
+
+func resolveADTime(passThrough action.ActionData, actionData []action.ActionData) int {
+	if passThrough.Type == "int" {
+		if v, ok := passThrough.Data.(int); ok {
+			return v
+		}
+	}
+	if len(actionData) > 0 && actionData[0].Type == action.ChatMessageType {
+		if chat, ok := actionData[0].Data.(datatypes.ChatMessageData); ok {
+			words := strings.Split(chat.Message.Text, " ")
+			if len(words) > 1 {
+				if t, err := strconv.Atoi(words[1]); err == nil {
+					return t
+				}
+			}
+		}
+	}
+	return defaultADLength
+}
+
+func init() {
+	action.ActionMap[ExampleAction.MetaData.Name] = ExampleAction
+	action.ActionMap[ReplyToMessage.MetaData.Name] = ReplyToMessage
+	action.ActionMap[SendMessage.MetaData.Name] = SendMessage
+	action.ActionMap[SendAnnouncement.MetaData.Name] = SendAnnouncement
+	action.ActionMap[Delay.MetaData.Name] = Delay
+	action.ActionMap[Log.MetaData.Name] = Log
+	action.ActionMap[RunAD.MetaData.Name] = RunAD
+	action.ActionMap[SetYappyChat.MetaData.Name] = SetYappyChat
+	action.ActionMap[IfBool.MetaData.Name] = IfBool
+	action.ActionMap[SendSerialData.MetaData.Name] = SendSerialData
+	action.ActionMap[Function.MetaData.Name] = Function
+	action.ActionMap[CompleteRedeemAction.MetaData.Name] = CompleteRedeemAction
+}

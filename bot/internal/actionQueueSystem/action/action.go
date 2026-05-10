@@ -1,10 +1,11 @@
 package action
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
-var actionMap = make(map[string]Action)
+var ActionMap = make(map[string]Action)
 
 type Flag struct {
 	Active     bool     // if a flag is set
@@ -53,15 +54,11 @@ type ActionMetaData struct {
 	} `json:"onAddPassThrough"`
 }
 
-// type Action interface {
-// 	Run(passThrough any, actionData []ActionData) Flags
-// 	OnAdd(passThrough any, actionData []ActionData) Flags // ran when this action is added to a queue
-// 	GetMetaData() ActionMetaData
-// }
-
 const ChatMessageType = "ChatMessageData" // use as ActionData to pass the chat message data to the action, if data is nil the command will replace it with ChatMessageData
 const ActionsType = "Actions"             // use as ActionData to pass the action data to the next action
+const RedeemType = "RedemptionData"       // use as ActionData to pass the redeem data to the next action
 const StringType = "string"               // use as ActionData to pass string data
+
 type ActionData struct {
 	// for actions
 	Type string `json:"type"`
@@ -74,8 +71,8 @@ type Action struct {
 	Run   func(passThrough ActionData, actionData []ActionData) Flags `json:"-"`
 	OnAdd func(passThrough ActionData, actionData []ActionData) Flags `json:"-"`
 
-	MetaData   ActionMetaData
-	ActionData []ActionData `json:"-"`
+	MetaData   ActionMetaData `json:"metaData"`
+	ActionData []ActionData   `json:"-"`
 }
 
 func (a *Action) Make(actionData []ActionData) Action {
@@ -88,11 +85,37 @@ func (a *Action) Make(actionData []ActionData) Action {
 }
 
 func (a *Action) UnmarshalJSON(data []byte) error {
+	type Alias Action
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if a.MetaData.Name == "" {
+		return fmt.Errorf("action name is required")
+	}
+
+	action, ok := ActionMap[a.MetaData.Name]
+	if !ok {
+		return fmt.Errorf("action with name %s not found", a.MetaData.Name)
+	}
+
+	a.Run = action.Run
+	a.OnAdd = action.OnAdd
+	a.MetaData = action.MetaData
 	return nil
 }
 
-func (a *Action) MarshalJSON() ([]byte, error) {
-	return nil, nil
+func (a Action) MarshalJSON() ([]byte, error) {
+	return fmt.Appendf(nil, `{"name": "%s"}`, a.MetaData.Name), nil
+}
+
+func (a Action) MarshalJSONFull() ([]byte, error) {
+	return json.Marshal(a.MetaData)
 }
 
 func Errorf(a Action, format string, v ...any) Flags {

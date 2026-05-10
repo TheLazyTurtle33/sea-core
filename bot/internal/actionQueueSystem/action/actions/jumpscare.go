@@ -1,53 +1,55 @@
 package actions
 
-// import (
-// 	"fmt"
-// 	"time"
+import (
+	"fmt"
+	"time"
 
-// 	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
-// 	"github.com/TheLazyTurtle33/sea-core/shared/logger"
-// 	"github.com/TheLazyTurtle33/sea-core/shared/obs"
-// )
+	"github.com/TheLazyTurtle33/sea-core/bot/internal/actionQueueSystem/action"
+	"github.com/TheLazyTurtle33/sea-core/shared/logger"
+	"github.com/TheLazyTurtle33/sea-core/shared/obs"
+)
 
-// type JumpScareAction struct {
-// 	action.Action
-// }
+var JumpScareAction = action.Action{
+	Run: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		flags := action.Flags{PassThrough: passThrough}
+		client, err := obs.Get()
+		if err != nil {
+			flags.Error = fmt.Errorf("JumpScareAction: failed to get OBS client: %w", err)
+			flags.Skip.Active = true
+			return flags
+		}
 
-// func (a JumpScareAction) Run(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
+		if _, err := client.SetSourceVisability("JumpScare", true); err != nil {
+			flags.Error = fmt.Errorf("JumpScareAction: failed to set visibility true: %w", err)
+			flags.Skip.Active = true
+			return flags
+		}
 
-// 	client, err := obs.Get()
-// 	if err != nil {
-// 		flags.Error = fmt.Errorf("JumpScare: faild to get obs client")
-// 		flags.Skip.Active = true
-// 		return flags
-// 	}
+		go func() {
+			time.Sleep(4 * time.Second)
+			if _, err := client.SetSourceVisability("JumpScare", false); err != nil {
+				logger.Error("JumpScareAction: failed to set visibility false", err)
+			}
+		}()
 
-// 	if _, err := client.SetSourceVisability("JumpScare", true); err != nil {
-// 		flags.Error = fmt.Errorf("JumpScare: fiald to set visability true")
-// 		flags.Skip.Active = true
-// 		return flags
-// 	}
+		flags.AddActions = action.Flag{
+			Active: true,
+			Actions: []action.Action{
+				CompleteRedeemAction.Make(nil),
+			},
+		}
+		return flags
+	},
+	OnAdd: func(passThrough action.ActionData, actionData []action.ActionData) action.Flags {
+		return action.Flags{PassThrough: passThrough}
+	},
+	MetaData: action.ActionMetaData{
+		Name:        "JumpScareAction",
+		Description: "Trigger the OBS jump scare scene and complete the redeem.",
+		RunData:     []action.ActionData{},
+	},
+}
 
-// 	go func() {
-// 		time.Sleep(4 * time.Second)
-// 		if _, err := client.SetSourceVisability("JumpScare", false); err != nil {
-// 			logger.Error("JumpScare: fiald to set visability to false", nil)
-// 		}
-// 	}()
-
-// 	flags.AddActions = action.Flag{
-// 		Active: true,
-// 		Actions: []action.Action{
-// 			CompleteRedeemAction{},
-// 		},
-// 		ActionData: [][]any{v},
-// 	}
-
-// 	return flags
-// }
-
-// func (a JumpScareAction) OnAdd(passThrough any, v ...any) action.Flags {
-// 	flags := action.Flags{PassThrough: passThrough}
-// 	return flags
-// }
+func init() {
+	action.ActionMap[JumpScareAction.MetaData.Name] = JumpScareAction
+}
